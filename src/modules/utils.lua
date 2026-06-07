@@ -23,7 +23,7 @@ function Utils:SafeCall(callback, ...)
 		local success, err = pcall(callback, ...)
 
 		if not success then
-			warn("[XYZ - HUB] Callback Error:", err)
+			warn("[XYZ - HUB] Callback error:", err)
 		end
 	end
 end
