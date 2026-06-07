@@ -295,7 +295,7 @@ ToggleButton.MouseButton1Click:Connect(function()
 end)
 
 Dragging:MakeDraggable(MainFrame)
-local ToggleWasDragged = Dragging:MakeDraggable(ToggleButton)
+Dragging:MakeDraggable(ToggleButton)
 
 HomePage:Render(context)
 GamePage:Render(context)
