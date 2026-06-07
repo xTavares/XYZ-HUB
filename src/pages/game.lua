@@ -31,10 +31,14 @@ function GamePage:Render(context)
 
 	Elements:Label("🟢 Game Supported", container)
 	Elements:Label("Game: " .. currentGame.name, container)
-	Elements:Label("PlaceId: " .. currentGame.placeId, container)
+	Elements:Label("PlaceId: " .. currentPlaceId, container)
 
-	local modulePath = getgitpath("games") .. currentPlaceId .. ".lua"
-	local code = getgenv().XYZHubLoad(modulePath)
+	local moduleUrl = getgitpath("games") .. currentPlaceId .. ".lua"
+
+	Elements:Label("Loading module:", container)
+	Elements:Label(moduleUrl, container)
+
+	local code = getgenv().XYZHubLoad(moduleUrl)
 
 	if not code then
 		Elements:Label("No module found for this game.", container)
@@ -45,10 +49,24 @@ function GamePage:Render(context)
 		return loadstring(code)()
 	end)
 
-	if success and typeof(gameModule) == "function" then
+	if not success then
+		Elements:Label("Module load error.", container)
+		warn("[XYZ - HUB] Module load error:", gameModule)
+		return
+	end
+
+	if typeof(gameModule) ~= "function" then
+		Elements:Label("Module did not return a function.", container)
+		return
+	end
+
+	local runSuccess, runErr = pcall(function()
 		gameModule(container, context)
-	else
-		Elements:Label("Failed to load game module.", container)
+	end)
+
+	if not runSuccess then
+		Elements:Label("Module runtime error.")
+		warn("[XYZ - HUB] Module runtime error:", runErr)
 	end
 end
 
