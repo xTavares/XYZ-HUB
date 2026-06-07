@@ -17,8 +17,10 @@ local COLORS = {
 }
 
 local function ensureLayout(parent)
-	if not parent:FindFirstChildOfClass("UIListLayout") then
-		local layout = Instance.new("UIListLayout")
+	local layout = parent:FindFirstChildOfClass("UIListLayout")
+
+	if not layout then
+		layout = Instance.new("UIListLayout")
 		layout.Padding = UDim.new(0, 10)
 		layout.SortOrder = Enum.SortOrder.LayoutOrder
 		layout.Parent = parent
@@ -34,10 +36,27 @@ local function ensureLayout(parent)
 	end
 
 	if parent:IsA("ScrollingFrame") then
-		parent.AutomaticCanvasSize = Enum.AutomaticSize.Y
-		parent.CanvasSize = UDim2.new(0, 0, 0, 0)
-		parent.ScrollBarThickness = 4
+		parent.ScrollingEnabled = true
+		parent.ScrollBarThickness = 5
+		parent.ScrollBarImageColor3 = Color3.fromRGB(105, 80, 255)
 		parent.ScrollingDirection = Enum.ScrollingDirection.Y
+		parent.AutomaticCanvasSize = Enum.AutomaticSize.None
+
+		local function updateCanvas()
+			task.defer(function()
+				parent.CanvasSize = UDim2.new(
+					0,
+					0,
+					0,
+					layout.AbsoluteContentSize.Y + 40
+				)
+			end)
+		end
+
+		updateCanvas()
+		layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+		parent.ChildAdded:Connect(updateCanvas)
+		parent.ChildRemoved:Connect(updateCanvas)
 	end
 end
 
