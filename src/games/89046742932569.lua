@@ -1,145 +1,102 @@
--- sail for brainrots - VERSÃO CORRIGIDA (simples)
+-- Reel for brainrots - Versão Melhorada
 
 return function(section)
     local elements = loadstring(game:HttpGet(getgitpath("src").."elements.lua"))()
+    
+    local repStorage = game:GetService("ReplicatedStorage")
+    local plr = game:GetService("Players").LocalPlayer
+    local placeEv = repStorage.RemoteHandler.Plot
+    
+    -- Config centralizada
+    local CONFIG = {
+        FISHING_COOLDOWN = 0.1,
+        DUPE_COOLDOWN = 0.5,
+        MAX_PLOTS = 30,
+        BRAINROT_ATTRIBUTE = "brainrot"
+    }
+    
+    -- State management
     getgenv().Farming = false
-    getgenv().Selling = false
-    getgenv().ChosenZone = nil
-    getgenv().MaxPrice = 0
-
-    local player = game:GetService("Players").LocalPlayer
-    local zonesFold = workspace.Zones
-
-    local function parseValue(str)
-        local suffixes = {
-            K = 1e3,
-            M = 1e6,
-            B = 1e9,
-            T = 1e12,
-            Q = 1e15,
-        }
-        
-        local num, suffix = str:match("^([%d%.]+)([A-Za-z]*)")
-        
-        if not num then return 0 end
-        
-        num = tonumber(num) or 0
-        suffix = suffix:upper()
-        
-        if suffixes[suffix] then
-            return num * suffixes[suffix]
-        end
-        
-        return num
-    end
-
-
-    elements:Textbox("Farm Zone (1-13)", section, function(v)
-        getgenv().ChosenZone = zonesFold["Zone" .. v]
-        if getgenv().ChosenZone then
-            print("✓ Zona: Zone" .. v)
-        end
-    end)
-
-    elements:Toggle("AutoFarm", section, function(v)
-        if v then
+    local farmingConnection = nil
+    
+    -- ============ FARMING FEATURE ============
+    elements:Toggle("Farming", section, function(isOn)
+        if isOn then
             getgenv().Farming = true
-
-            while getgenv().Farming do
-                local char = player.Character
-                if not char then 
-                    task.wait(0.5)
-                    continue 
-                end
-
-                -- ⭐ CHECAR SE A ZONA EXISTE
-                if not getgenv().ChosenZone or not getgenv().ChosenZone.Parent then
-                    task.wait(0.5)
-                    continue
-                end
-
-                local objects = getgenv().ChosenZone:FindFirstChild("Objects")
-                if not objects then
-                    task.wait(0.5)
-                    continue
-                end
-
-                for _, brainrot in pairs(objects:GetChildren()) do
-                    if not getgenv().Farming then return end
-
-                    -- ⭐ VERIFICAR SE OBJETO AINDA EXISTE
-                    if not brainrot or brainrot.Parent ~= objects then continue end
+            
+            -- Loop melhorado com melhor controle
+            task.spawn(function()
+                while getgenv().Farming do
+                    if pcall(function()
+                        repStorage.RemoteHandler.Fishing:FireServer("Caught", 3)
+                    end) then
+                        -- Sucesso
+                    else
+                        warn("Erro ao fazer fishing")
+                    end
                     
-                    if not brainrot:FindFirstChild("PrimaryPart") then continue end
-
-                    print("📍 Indo para: " .. brainrot.Name)
-
-                    char:MoveTo(brainrot.PrimaryPart.Position)
-                    task.wait(0.5) -- ⭐ ESPERAR CHEGAR
-                    
-                    repeat
-                        if not getgenv().Farming then break end
-                        if not brainrot or brainrot.Parent ~= objects then break end
-                        
-                        local prompt = brainrot:FindFirstChild("ProximityPrompt")
-                        if prompt then
-                            fireproximityprompt(prompt)
-                        end
-                        task.wait(0.1)
-                    until brainrot == nil or brainrot.Parent ~= objects
-
-                    char:MoveTo(workspace.Bases[player.Name].Root.Position)
-                    task.wait(0.5)
+                    task.wait(CONFIG.FISHING_COOLDOWN)
                 end
-
-                task.wait(1)
-            end
+                getgenv().Farming = false
+            end)
         else
             getgenv().Farming = false
         end
     end)
-
-    elements:Textbox("Max Price", section, function(v)
-        getgenv().MaxPrice = tonumber(v)
-    end)
-
-    elements:Toggle("Auto Sell", section, function(v)
-        if v then
-            getgenv().Selling = true
-
-            while getgenv().Selling do
-                local char = player.Character
-                if not char then 
-                    task.wait(1)
-                    continue 
-                end
-
-                for _, brainrot in pairs(player.Backpack:GetChildren()) do
-                    if brainrot.Name == "Bat" then continue end
-                    spawn(function()
-                        pcall(function()
-                            if parseValue(brainrot.Handle.ObjectInfo.Value.ValueLabel.Text) <= getgenv().MaxPrice then
-                                local Event = game:GetService("ReplicatedStorage").Shared.Classes.RemoteFunction.Remotes.EntityShared_SellEntity
-                                Event:InvokeServer(brainrot.Name)
-                            end
-                        end)
-                    end)
-                end
-
-                task.wait(3)
-            end
-        else
-            getgenv().Selling = false
+    
+    -- ============ DUPE FEATURE ============
+    elements:Button("Dupe Brainrot InHand", section, function()
+        local char = plr.Character
+        if not char then
+            warn("Personagem não encontrado")
+            return
         end
+        
+        local br = char:FindFirstChildOfClass("Tool")
+        
+        -- Validações robustas
+        if not br then
+            warn("Nenhuma Tool em mãos")
+            return
+        end
+        
+        if not br:GetAttribute(CONFIG.BRAINROT_ATTRIBUTE) then
+            warn("Tool não é um brainrot válido")
+            return
+        end
+        
+        -- Dupe com tratamento de erros
+        local successCount = 0
+        local failCount = 0
+        
+        for plotNum = 1, CONFIG.MAX_PLOTS do
+            if not getgenv().Farming then -- Permite cancelamento
+                if pcall(function()
+                    placeEv:FireServer("Add", "Plot" .. plotNum, br.Name)
+                    successCount = successCount + 1
+                end) then
+                    -- Sucesso silencioso
+                else
+                    failCount = failCount + 1
+                    warn("Erro ao duplicar no Plot " .. plotNum)
+                end
+            end
+            
+            task.wait(CONFIG.DUPE_COOLDOWN)
+        end
+        
+        print("✓ Dupe concluído - Sucesso: " .. successCount .. " | Falhas: " .. failCount)
     end)
-
-    elements:Button("Redeem Codes", section, function()
-        local codes = {"Stop Looking", "TommysHouse", "Phew", "GoldStatue", "FreeSpin"}
-
-        for i, v in pairs(codes) do
-            local Event = game:GetService("ReplicatedStorage").Shared.Classes.RemoteFunction.Remotes.CodeShared_Redeem
-            Event:InvokeServer(v)
-            task.wait(0.2)
+    
+    -- ============ CLEANUP ============
+    -- Garante que farming para quando o script é desabilitado
+    local connection
+    connection = plr:GetPropertyChangedSignal("Parent"):Connect(function()
+        if not plr.Parent then
+            getgenv().Farming = false
+            if connection then
+                connection:Disconnect()
+            end
         end
     end)
 end
