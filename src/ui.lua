@@ -263,6 +263,7 @@ local context = {
 	Elements = Elements,
 	Utils = Utils,
 	Tabs = Tabs,
+	Theme = Theme,
 	Games = Games or {},
 	Credits = Credits or {}
 }
