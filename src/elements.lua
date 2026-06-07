@@ -487,4 +487,127 @@ function UI:ProfileCard(parent, name, role)
 	return card
 end
 
+function UI:SearchBox(parent, placeholder, callback)
+	ensureLayout(parent)
+
+	local theme = self:GetTheme()
+
+	local box = Instance.new("Frame")
+	box.Size = UDim2.new(1, -4, 0, 46)
+	box.BackgroundColor3 = theme.Card
+	box.BorderSizePixel = 0
+	box.Parent = parent
+
+	corner(box, 12)
+	stroke(box)
+
+	local icon = Instance.new("TextLabel")
+	icon.Size = UDim2.fromOffset(36, 46)
+	icon.BackgroundTransparency = 1
+	icon.Text = "🔍"
+	icon.Font = Enum.Font.GothamBold
+	icon.TextSize = 15
+	icon.TextColor3 = theme.Muted
+	icon.Parent = box
+
+	local input = Instance.new("TextBox")
+	input.Size = UDim2.new(1, -46, 1, 0)
+	input.Position = UDim2.fromOffset(38, 0)
+	input.BackgroundTransparency = 1
+	input.Text = ""
+	input.PlaceholderText = placeholder or "Search..."
+	input.Font = Enum.Font.GothamMedium
+	input.TextSize = 14
+	input.TextColor3 = theme.Text
+	input.PlaceholderColor3 = theme.Muted
+	input.TextXAlignment = Enum.TextXAlignment.Left
+	input.Parent = box
+
+	input:GetPropertyChangedSignal("Text"):Connect(function()
+		if callback then
+			callback(input.Text)
+		end
+	end)
+
+	return input
+end
+
+function UI:GameCard(parent, gameData, callback)
+	ensureLayout(parent)
+
+	local theme = self:GetTheme()
+
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, -4, 0, 72)
+	button.BackgroundColor3 = theme.Card
+	button.Text = ""
+	button.BorderSizePixel = 0
+	button.AutoButtonColor = false
+	button.Parent = parent
+
+	corner(button, 14)
+	stroke(button)
+
+	local dot = Instance.new("TextLabel")
+	dot.Size = UDim2.fromOffset(42, 42)
+	dot.Position = UDim2.fromOffset(12, 15)
+	dot.BackgroundColor3 = theme.Accent
+	dot.Text = gameData.status or "🟢"
+	dot.Font = Enum.Font.GothamBold
+	dot.TextSize = 18
+	dot.TextColor3 = Color3.fromRGB(255, 255, 255)
+	dot.BorderSizePixel = 0
+	dot.Parent = button
+	corner(dot, 12)
+
+	local name = Instance.new("TextLabel")
+	name.Size = UDim2.new(1, -130, 0, 26)
+	name.Position = UDim2.fromOffset(66, 13)
+	name.BackgroundTransparency = 1
+	name.Text = tostring(gameData.name)
+	name.Font = Enum.Font.GothamBold
+	name.TextSize = 15
+	name.TextColor3 = theme.Text
+	name.TextXAlignment = Enum.TextXAlignment.Left
+	name.TextTruncate = Enum.TextTruncate.AtEnd
+	name.Parent = button
+
+	local id = Instance.new("TextLabel")
+	id.Size = UDim2.new(1, -130, 0, 22)
+	id.Position = UDim2.fromOffset(66, 39)
+	id.BackgroundTransparency = 1
+	id.Text = "PlaceId: " .. tostring(gameData.placeId)
+	id.Font = Enum.Font.Gotham
+	id.TextSize = 12
+	id.TextColor3 = theme.Muted
+	id.TextXAlignment = Enum.TextXAlignment.Left
+	id.Parent = button
+
+	local badge = Instance.new("TextLabel")
+	badge.Size = UDim2.fromOffset(86, 28)
+	badge.Position = UDim2.new(1, -100, 0.5, -14)
+	badge.BackgroundColor3 = Color3.fromRGB(38, 70, 48)
+	badge.Text = "Supported"
+	badge.Font = Enum.Font.GothamBold
+	badge.TextSize = 12
+	badge.TextColor3 = Color3.fromRGB(160, 255, 185)
+	badge.BorderSizePixel = 0
+	badge.Parent = button
+	corner(badge, 20)
+
+	button.MouseEnter:Connect(function()
+		tween(button, {BackgroundColor3 = theme.Hover})
+	end)
+
+	button.MouseLeave:Connect(function()
+		tween(button, {BackgroundColor3 = theme.Card})
+	end)
+
+	button.MouseButton1Click:Connect(function()
+		safe(callback)
+	end)
+
+	return button
+end
+
 return UI
