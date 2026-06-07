@@ -241,6 +241,7 @@ local SettingsPage = loadModule(getgitpath("pages") .. "settings.lua")
 local CreditsPage = loadModule(getgitpath("pages") .. "credits.lua")
 
 local Theme = loadModule(getgitpath("modules") .. "theme.lua")
+local SettingsStore = loadModule(getgitpath("modules") .. "settingsStore.lua")
 
 if not Elements or not Utils or not Dragging or not TabsModule or not Theme then
 	warn("[XYZ - HUB] Core modules failed.")
@@ -256,6 +257,34 @@ local Sections = {
 }
 
 local Tabs = TabsModule:Create(Sections, Utils)
+
+local Settings = SettingsStore and SettingsStore:Load() or {}
+
+if Theme and Settings.Theme then
+	Theme:Set(Settings.Theme)
+end
+
+if Settings.HubPosition then
+	MainFrame.Position = UDim2.new(
+		Settings.HubPosition.XScale,
+		Settings.HubPosition.XOffset,
+		Settings.HubPosition.YScale,
+		Settings.HubPosition.YOffset
+	)
+end
+
+if Settings.TogglePosition then
+	ToggleButton.Position = UDim2.new(
+		Settings.TogglePosition.XScale,
+		Settings.TogglePosition.XOffset,
+		Settings.TogglePosition.YScale,
+		Settings.TogglePosition.YOffset
+	)
+end
+
+local scale = Instance.new("UIScale")
+scale.Parent = MainFrame
+scale.Scale = Settings.UIScale == "Small" and 0.9 or Settings.UIScale == "Large" and 1.1 or 1
 
 local context = {
 	Hub = Hub,
