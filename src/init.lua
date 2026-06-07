@@ -45,17 +45,19 @@ function env.getgitpath(pathType)
 end
 
 function env.XYZHubLoad(path)
+	local finalPath = path .. "?t=" .. tostring(os.time())
+
 	local success, result = pcall(function()
-		return game:HttpGet(path)
+		return game:HttpGet(finalPath)
 	end)
 
 	if not success then
-		warn("[XYZ - HUB] HTTP error:", path, result)
+		warn("[XYZ - HUB] HTTP error:", finalPath, result)
 		return nil
 	end
 
 	if not result or result == "" or result == "404: Not Found" then
-		warn("[XYZ - HUB] Failed to load:", path)
+		warn("[XYZ - HUB] Failed to load:", finalPath)
 		return nil
 	end
 
