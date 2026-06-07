@@ -21,27 +21,31 @@ function GamePage:Render(context)
 	end
 
 	if not currentGame then
-		Elements:Unsupported(container, function()
+		Elements:Hero(container, "Unsupported Game", "This Game is not Listed in XYZ - HUB.")
+		Elements:StatCard(container, "Current PlaceId", currentPlaceId, "🔴")
+
+		Elements:Button("Open Game List", container, function()
 			Tabs:Switch(Sections.GamesList)
 		end)
 
-		Elements:Label("Current PlaceId: " .. currentPlaceId, container)
+		Elements:Button("Copy Discord", container, function()
+			if setclipboard then
+				setclipboard(context.Hub.Discord)
+			end
+		end)
+
 		return
 	end
 
-	Elements:Label("🟢 Game Supported", container)
-	Elements:Label("Game: " .. currentGame.name, container)
-	Elements:Label("PlaceId: " .. currentPlaceId, container)
+	Elements:Hero(container, currentGame.name, "Game Module Loaded Successfully")
+	Elements:StatCard(container, "Support Status", currentGame.status .. " Supported", "🎮")
+	Elements:StatCard(container, "PlaceId", currentPlaceId, "🧩")
 
 	local moduleUrl = getgitpath("games") .. currentPlaceId .. ".lua"
-
-	Elements:Label("Loading module:", container)
-	Elements:Label(moduleUrl, container)
-
 	local code = getgenv().XYZHubLoad(moduleUrl)
 
 	if not code then
-		Elements:Label("No module found for this game.", container)
+		Elements:StatCard(container, "Module", "No Module Found", "⚠️")
 		return
 	end
 
@@ -49,24 +53,17 @@ function GamePage:Render(context)
 		return loadstring(code)()
 	end)
 
-	if not success then
-		Elements:Label("Module load error.", container)
-		warn("[XYZ - HUB] Module load error:", gameModule)
+	if not success or typeof(gameModule) ~= "function" then
+		Elements:StatCard(container, "Module", "Load error", "🔴")
 		return
 	end
 
-	if typeof(gameModule) ~= "function" then
-		Elements:Label("Module did not return a function.", container)
-		return
-	end
-
-	local runSuccess, runErr = pcall(function()
+	local runSuccess, runError = pcall(function()
 		gameModule(container, context)
 	end)
 
 	if not runSuccess then
-		Elements:Label("Module runtime error.")
-		warn("[XYZ - HUB] Module runtime error:", runErr)
+		Elements:StatCard(container, "Runtime Error", tostring(runError), "🔴")
 	end
 end
 
