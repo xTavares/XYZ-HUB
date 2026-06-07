@@ -8,10 +8,38 @@ function GameListPage:Render(context)
 
 	Utils:Clear(container)
 
+	Elements:Hero(container, "Game List", "Search Supported Games")
+
+	local searchBox = Elements:SearchBox(container, "Search Game...", function(query)
+		GameListPage:RenderFiltered(context, query)
+	end)
+
+	GameListPage:RenderFiltered(context, "")
+end
+
+function GameListPage:RenderFiltered(context, query)
+	local container = context.Sections.GamesList.Container
+	local Elements = context.Elements
+	local Games = context.Games
+
+	for _, child in ipairs(container:GetChildren()) do
+		if child:GetAttribute("GameCard") then
+			child:Destroy()
+		end
+	end
+
+	query = string.lower(query or "")
+
 	for _, gameData in ipairs(Games) do
-		Elements:Button(gameData.status .. "  " .. gameData.name, container, function()
-			warn("[XYZ - HUB] Selected Game:", gameData.name)
-		end)
+		local name = string.lower(gameData.name)
+
+		if query == "" or string.find(name, query, 1, true) then
+			local card = Elements:GameCard(container, gameData, function()
+				warn("[XYZ - HUB] Selected game:", gameData.name)
+			end)
+
+			card:SetAttribute("GameCard", true)
+		end
 	end
 end
 
