@@ -1,4 +1,4 @@
--- sail for brainrots - Versão Ultra Otimizada
+-- sail for brainrots - VERSÃO CORRIGIDA
 
 return function(section)
     local elements = loadstring(game:HttpGet(getgitpath("src").."elements.lua"))()
@@ -7,42 +7,32 @@ return function(section)
     local zonesFold = workspace.Zones
     local repStorage = game:GetService("ReplicatedStorage")
     
-    -- ============ CONFIG CENTRALIZADA ============
+    -- ============ CONFIG ============
     local CONFIG = {
         FARM_COOLDOWN = 0.1,
         RETURN_COOLDOWN = 0.5,
         SELL_CHECK_INTERVAL = 3,
-        ZONE_CHECK_INTERVAL = 1,
-        BAT_TOOL_NAME = "Bat",
-        MAX_ZONES = 13,
+        MOVEMENT_TIMEOUT = 15,
+        PROMPT_RETRY = 5,
+        PROXIMITY_OFFSET = Vector3.new(0, 3, 0),
         CODES = {"Stop Looking", "TommysHouse", "Phew", "GoldStatue", "FreeSpin"}
     }
     
-    -- ============ STATE MANAGEMENT ============
     getgenv().Farming = false
     getgenv().Selling = false
     getgenv().ChosenZone = nil
     getgenv().MaxPrice = 0
-    getgenv().FarmingStats = {
-        collected = 0,
-        sold = 0,
-        startTime = 0
-    }
     
-    -- ============ UTILITY FUNCTIONS ============
+    -- ============ PARSE VALUE ============
     local function parseValue(str)
         if not str or type(str) ~= "string" then return 0 end
         
-        local suffixes = {
-            K = 1e3, M = 1e6, B = 1e9, T = 1e12, Q = 1e15
-        }
-        
+        local suffixes = {K = 1e3, M = 1e6, B = 1e9, T = 1e12, Q = 1e15}
         local num, suffix = str:match("^([%d%.]+)([A-Za-z]*)")
         if not num then return 0 end
         
         num = tonumber(num) or 0
         suffix = suffix:upper()
-        
         return suffixes[suffix] and (num * suffixes[suffix]) or num
     end
     
@@ -51,150 +41,157 @@ return function(section)
         return base and base:FindFirstChild("Root")
     end
     
-    local function isCharacterValid(char)
-        return char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid").Health > 0
-    end
-    
-    local function formatTime(seconds)
-        local hours = math.floor(seconds / 3600)
-        local mins = math.floor((seconds % 3600) / 60)
-        local secs = seconds % 60
-        return string.format("%02d:%02d:%02d", hours, mins, secs)
-    end
-    
-    -- ============ FARMING FEATURE ============
-    elements:Textbox("Farm Zone (1-" .. CONFIG.MAX_ZONES .. ")", section, function(v)
+    -- ============ FARMING - VERSÃO CORRIGIDA ============
+    elements:Textbox("Farm Zone (1-13)", section, function(v)
         local zoneNum = tonumber(v)
-        if not zoneNum or zoneNum < 1 or zoneNum > CONFIG.MAX_ZONES then
-            warn("Zona Inválida! Use 1-" .. CONFIG.MAX_ZONES)
+        if not zoneNum or zoneNum < 1 or zoneNum > 13 then
+            warn("Zona inválida! Use 1-13")
             return
         end
         
         getgenv().ChosenZone = zonesFold["Zone" .. zoneNum]
-        if getgenv().ChosenZone then
-            print("✓ Zona Selecionada: Zone" .. zoneNum)
-        else
-            warn("Zona não Encontrada!")
-        end
+        print("✓ Zona selecionada: Zone" .. zoneNum)
     end)
     
     elements:Toggle("AutoFarm", section, function(v)
         if v then
             if not getgenv().ChosenZone then
-                warn("Selecione uma Zona Primeiro!")
+                warn("Selecione uma zona primeiro!")
                 return
             end
             
             getgenv().Farming = true
-            getgenv().FarmingStats.collected = 0
-            getgenv().FarmingStats.startTime = tick()
+            print("🌾 Farm iniciado!")
             
             task.spawn(function()
                 while getgenv().Farming do
                     local char = player.Character
-                    if not isCharacterValid(char) then
-                        task.wait(CONFIG.ZONE_CHECK_INTERVAL)
+                    if not char or not char:FindFirstChild("HumanoidRootPart") then
+                        task.wait(0.5)
                         continue
                     end
                     
-                    local baseRoot = getPlayerBase()
-                    if not baseRoot then
-                        task.wait(CONFIG.ZONE_CHECK_INTERVAL)
+                    local humanoid = char:FindFirstChildOfClass("Humanoid")
+                    if not humanoid or humanoid.Health <= 0 then
+                        task.wait(0.5)
                         continue
                     end
                     
-                    -- Coletar brainrots
                     local objects = getgenv().ChosenZone:FindFirstChild("Objects")
-                    if objects then
-                        for _, brainrot in pairs(objects:GetChildren()) do
-                            if not getgenv().Farming then break end
-                            if not brainrot:FindFirstChild("PrimaryPart") then continue end
+                    if not objects then
+                        task.wait(1)
+                        continue
+                    end
+                    
+                    -- ⭐ LOOP CORRETO PARA CADA OBJETO
+                    for _, brainrot in pairs(objects:GetChildren()) do
+                        if not getgenv().Farming then break end
+                        if brainrot.Parent ~= objects then continue end
+                        
+                        local prompt = brainrot:FindFirstChild("ProximityPrompt")
+                        if not prompt then continue end
+                        
+                        pcall(function()
+                            local targetPos = brainrot.PrimaryPart.Position + CONFIG.PROXIMITY_OFFSET
                             
-                            pcall(function()
-                                char:MoveTo(brainrot.PrimaryPart.Position)
-                                
-                                -- Aguardar chegada
-                                local timeout = tick() + 10
-                                repeat
-                                    if not getgenv().Farming or tick() > timeout then break end
-                                    if brainrot.Parent ~= objects then break end
-                                    
-                                    if brainrot:FindFirstChild("ProximityPrompt") then
-                                        fireproximityprompt(brainrot.ProximityPrompt)
-                                    end
-                                    
-                                    task.wait(CONFIG.FARM_COOLDOWN)
-                                until brainrot.Parent ~= objects or not getgenv().Farming
-                                
-                                getgenv().FarmingStats.collected = getgenv().FarmingStats.collected + 1
+                            -- Mover para o objeto
+                            humanoid:MoveTo(targetPos)
+                            
+                            -- ⭐ AGUARDAR CHEGADA OU TIMEOUT
+                            local startTime = tick()
+                            local reached = false
+                            
+                            local connection
+                            connection = humanoid.MoveToFinished:Connect(function(completed)
+                                if completed then
+                                    reached = true
+                                end
+                                connection:Disconnect()
                             end)
-                        end
+                            
+                            -- Timeout de 15s
+                            while not reached and (tick() - startTime) < CONFIG.MOVEMENT_TIMEOUT do
+                                if not getgenv().Farming or brainrot.Parent ~= objects then break end
+                                task.wait(0.1)
+                            end
+                            
+                            if connection and connection.Connected then
+                                connection:Disconnect()
+                            end
+                            
+                            -- ⭐ DISPARAR PROMPT MÚLTIPLAS VEZES
+                            if brainrot.Parent == objects then
+                                for retry = 1, CONFIG.PROMPT_RETRY do
+                                    if brainrot.Parent ~= objects or not getgenv().Farming then break end
+                                    
+                                    pcall(function()
+                                        fireproximityprompt(prompt)
+                                    end)
+                                    
+                                    task.wait(0.15)
+                                end
+                            end
+                        end)
+                        
+                        task.wait(CONFIG.FARM_COOLDOWN)
                     end
                     
                     -- Retornar à base
                     if getgenv().Farming then
-                        pcall(function()
-                            char:MoveTo(baseRoot.Position)
-                        end)
-                        task.wait(CONFIG.RETURN_COOLDOWN)
+                        local baseRoot = getPlayerBase()
+                        if baseRoot then
+                            humanoid:MoveTo(baseRoot.Position)
+                            task.wait(CONFIG.RETURN_COOLDOWN)
+                        end
                     end
                     
-                    task.wait(CONFIG.ZONE_CHECK_INTERVAL)
+                    task.wait(0.5)
                 end
                 
-                local elapsedTime = tick() - getgenv().FarmingStats.startTime
-                print(string.format("✓ Farm Concluído | Coletados: %d | Tempo: %s", 
-                    getgenv().FarmingStats.collected, formatTime(elapsedTime)))
+                print("✓ Farm finalizado")
             end)
         else
             getgenv().Farming = false
         end
     end)
     
-    -- ============ SELLING FEATURE ============
+    -- ============ SELLING ============
     elements:Textbox("Max Price", section, function(v)
         local price = tonumber(v)
         getgenv().MaxPrice = price or 0
-        if price then
-            print("✓ Preço Máximo Definido: " .. tostring(price))
-        end
     end)
     
     elements:Toggle("Auto Sell", section, function(v)
         if v then
             if getgenv().MaxPrice == 0 then
-                warn("Defina um Preço Máximo Primeiro!")
+                warn("Defina um preço máximo!")
                 return
             end
             
             getgenv().Selling = true
-            getgenv().FarmingStats.sold = 0
             
             task.spawn(function()
                 while getgenv().Selling do
                     local char = player.Character
-                    if not isCharacterValid(char) then
-                        task.wait(CONFIG.SELL_CHECK_INTERVAL)
+                    if not char then
+                        task.wait(1)
                         continue
                     end
                     
-                    local backpackItems = player.Backpack:GetChildren()
-                    local itemsToSell = {}
-                    
-                    -- Coletar items para vender
-                    for _, item in pairs(backpackItems) do
-                        if item.Name == CONFIG.BAT_TOOL_NAME then continue end
+                    for _, item in pairs(player.Backpack:GetChildren()) do
+                        if item.Name == "Bat" then continue end
                         
                         pcall(function()
                             local handle = item:FindFirstChild("Handle")
                             if handle then
                                 local objectInfo = handle:FindFirstChild("ObjectInfo")
-                                if objectInfo then
+                                if objectInfo and objectInfo:FindFirstChild("Value") then
                                     local valueLabel = objectInfo.Value:FindFirstChild("ValueLabel")
                                     if valueLabel then
                                         local price = parseValue(valueLabel.Text)
                                         if price <= getgenv().MaxPrice then
-                                            table.insert(itemsToSell, item.Name)
+                                            local Event = repStorage.Shared.Classes.RemoteFunction.Remotes.EntityShared_SellEntity
+                                            Event:InvokeServer(item.Name)
                                         end
                                     end
                                 end
@@ -202,59 +199,25 @@ return function(section)
                         end)
                     end
                     
-                    -- Vender em paralelo
-                    if #itemsToSell > 0 then
-                        local sellEvent = repStorage.Shared.Classes.RemoteFunction.Remotes.EntityShared_SellEntity
-                        for _, itemName in pairs(itemsToSell) do
-                            task.spawn(function()
-                                pcall(function()
-                                    sellEvent:InvokeServer(itemName)
-                                    getgenv().FarmingStats.sold = getgenv().FarmingStats.sold + 1
-                                end)
-                            end)
-                        end
-                    end
-                    
                     task.wait(CONFIG.SELL_CHECK_INTERVAL)
                 end
-                
-                print("✓ Auto Sell Desativado | Total Vendido: " .. getgenv().FarmingStats.sold)
             end)
         else
             getgenv().Selling = false
         end
     end)
     
-    -- ============ CODE REDEMPTION ============
+    -- ============ REDEEM CODES ============
     elements:Button("Redeem Codes", section, function()
-        local redeemEvent = repStorage.Shared.Classes.RemoteFunction.Remotes.CodeShared_Redeem
-        local successCount = 0
+        local Event = repStorage.Shared.Classes.RemoteFunction.Remotes.CodeShared_Redeem
         
-        for i, code in pairs(CONFIG.CODES) do
-            task.spawn(function()
-                pcall(function()
-                    local result = redeemEvent:InvokeServer(code)
-                    if result then
-                        print("✓ Código resgatado: " .. code)
-                        successCount = successCount + 1
-                    end
-                end)
+        for _, code in pairs(CONFIG.CODES) do
+            pcall(function()
+                Event:InvokeServer(code)
+                print("✓ Regatado: " .. code)
             end)
-            task.wait(0.1)
+            task.wait(0.2)
         end
-        
-        print("✓ Resgate Concluído | Total: " .. successCount .. "/" .. #CONFIG.CODES)
-    end)
-    
-    -- ============ STATS DISPLAY ============
-    elements:Button("Show Stats", section, function()
-        local elapsed = tick() - getgenv().FarmingStats.startTime
-        print("\n=== FARMING STATS ===")
-        print("Coletados: " .. getgenv().FarmingStats.collected)
-        print("Vendidos: " .. getgenv().FarmingStats.sold)
-        print("Tempo: " .. formatTime(elapsed))
-        print("Taxa: " .. string.format("%.2f", getgenv().FarmingStats.collected / math.max(elapsed, 1)) .. " Items/s")
-        print("====================\n")
     end)
     
     -- ============ CLEANUP ============
