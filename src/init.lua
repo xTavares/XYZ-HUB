@@ -2,7 +2,7 @@ local env = getgenv()
 
 local HUB_NAME = "XYZ - HUB"
 local HUB_FOLDER = "XYZHub"
-local RAW_BASE = "https://raw.githubusercontent.com/xTavares/XYZ-HUB/main/"
+local RAW_BASE = "https://raw.githubusercontent.com/xTavares/XYZ-HUB/refs/heads/main/"
 
 env.XYZHub = env.XYZHub or {}
 env.XYZHub.Name = HUB_NAME
