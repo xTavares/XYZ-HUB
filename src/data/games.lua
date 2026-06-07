@@ -1,7 +1,7 @@
 return {
 	{
-		name = "Reel for brainrots",
-		placeId = "99435399946069",
+		name = "Sail for Brainrots",
+		placeId = "89046742932569",
 		status = "🟢"
 	}
 }
