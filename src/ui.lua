@@ -286,12 +286,16 @@ HideButton.MouseButton1Click:Connect(function()
 end)
 
 ToggleButton.MouseButton1Click:Connect(function()
+	if ToggleWasDragged and ToggleWasDragged() then
+		return
+	end
+
 	MainFrame.Visible = true
 	ToggleButton.Visible = false
 end)
 
 Dragging:MakeDraggable(MainFrame)
-Dragging:MakeDraggable(ToggleButton)
+local ToggleWasDragged = Dragging:MakeDraggable(ToggleButton)
 
 HomePage:Render(context)
 GamePage:Render(context)
