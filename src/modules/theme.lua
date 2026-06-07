@@ -61,6 +61,8 @@ function Theme:Set(name)
 		self.Current = name
 	end
 
+	getgenv().XYZHubTheme = self:Get()
+
 	return self:Get()
 end
 
