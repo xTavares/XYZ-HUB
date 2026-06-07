@@ -108,8 +108,8 @@ corner(HideButton, 10)
 
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "togglebtn"
-ToggleButton.Size = UDim2.fromOffset(110, 38)
-ToggleButton.Position = UDim2.new(0, 20, 0.5, -19)
+ToggleButton.Size = UDim2.fromOffset(118, 40)
+ToggleButton.Position = UDim2.new(0, 24, 0.5, -20)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(105, 80, 255)
 ToggleButton.Text = "XYZ - HUB"
 ToggleButton.Font = Enum.Font.GothamBold
@@ -118,8 +118,11 @@ ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.BorderSizePixel = 0
 ToggleButton.AutoButtonColor = false
 ToggleButton.Visible = false
+ToggleButton.Active = true
+ToggleButton.Draggable = false
 ToggleButton.Parent = ScreenGui
 corner(ToggleButton, 12)
+stroke(ToggleButton, Color3.fromRGB(145, 125, 255), 0.15)
 
 local TabList = Instance.new("Frame")
 TabList.Name = "tablist"
@@ -279,6 +282,7 @@ end)
 HideButton.MouseButton1Click:Connect(function()
 	MainFrame.Visible = false
 	ToggleButton.Visible = true
+	ToggleButton.ZIndex = 999
 end)
 
 ToggleButton.MouseButton1Click:Connect(function()
@@ -287,6 +291,7 @@ ToggleButton.MouseButton1Click:Connect(function()
 end)
 
 Dragging:MakeDraggable(MainFrame)
+Dragging:MakeDraggable(ToggleButton)
 
 HomePage:Render(context)
 GamePage:Render(context)
