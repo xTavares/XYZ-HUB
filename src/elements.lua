@@ -3,171 +3,264 @@ local TweenService = game:GetService("TweenService")
 local env = getgenv()
 local hub = env.XYZHub
 
-local elements = import("rbxassetid://113037265185555")
-
 local UI = {}
 
 local COLORS = {
-	Green = Color3.fromRGB(70, 190, 95),
-	Red = Color3.fromRGB(190, 70, 70),
-	Button = Color3.fromRGB(35, 36, 52),
-	ButtonHover = Color3.fromRGB(48, 50, 72),
-	Text = Color3.fromRGB(235, 237, 255)
+	Bg = Color3.fromRGB(18, 19, 29),
+	Card = Color3.fromRGB(30, 31, 48),
+	CardHover = Color3.fromRGB(42, 44, 68),
+	Text = Color3.fromRGB(240, 242, 255),
+	Muted = Color3.fromRGB(160, 165, 190),
+	Accent = Color3.fromRGB(126, 87, 255),
+	Green = Color3.fromRGB(90, 220, 120),
+	Red = Color3.fromRGB(220, 80, 80)
 }
 
-local function safeCallback(callback, ...)
-	if typeof(callback) == "function" then
-		local success, err = pcall(callback, ...)
+local function ensureLayout(parent)
+	if not parent:FindFirstChildOfClass("UIListLayout") then
+		local layout = Instance.new("UIListLayout")
+		layout.Padding = UDim.new(0, 10)
+		layout.SortOrder = Enum.SortOrder.LayoutOrder
+		layout.Parent = parent
 
-		if not success then
-			warn("[XYZ - HUB] Callback Error:", err)
+		local padding = Instance.new("UIPadding")
+		padding.PaddingTop = UDim.new(0, 14)
+		padding.PaddingLeft = UDim.new(0, 14)
+		padding.PaddingRight = UDim.new(0, 14)
+		padding.Parent = parent
+	end
+end
+
+local function corner(obj, radius)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, radius or 10)
+	c.Parent = obj
+end
+
+local function stroke(obj)
+	local s = Instance.new("UIStroke")
+	s.Color = Color3.fromRGB(55, 57, 84)
+	s.Thickness = 1
+	s.Transparency = 0.35
+	s.Parent = obj
+end
+
+local function tween(obj, props, time)
+	TweenService:Create(
+		obj,
+		TweenInfo.new(time or 0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		props
+	):Play()
+end
+
+local function safe(callback, ...)
+	if typeof(callback) == "function" then
+		local ok, err = pcall(callback, ...)
+		if not ok then
+			warn("[XYZ - HUB] Callback error:", err)
 		end
 	end
 end
 
-local function tween(object, properties, duration)
-	TweenService:Create(
-		object,
-		TweenInfo.new(duration or 0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		properties
-	):Play()
-end
-
-local function addHover(button)
-	if not button or not button:IsA("GuiButton") then
-		return
-	end
-
-	local originalColor = button.BackgroundColor3
-
-	button.MouseEnter:Connect(function()
-		tween(button, {
-			BackgroundColor3 = COLORS.ButtonHover
-		}, 0.14)
-	end)
-
-	button.MouseLeave:Connect(function()
-		tween(button, {
-			BackgroundColor3 = originalColor
-		}, 0.14)
-	end)
-end
-
 function UI:Label(text, parent)
-	local label = elements.LabelElement:Clone()
+	ensureLayout(parent)
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -4, 0, 32)
+	label.BackgroundTransparency = 1
 	label.Text = tostring(text or "")
+	label.Font = Enum.Font.GothamMedium
+	label.TextSize = 14
 	label.TextColor3 = COLORS.Text
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextWrapped = true
 	label.Parent = parent
 
 	return label
 end
 
 function UI:Button(text, parent, callback)
-	local button = elements.ButtonElement:Clone()
-	button.TextLabel.Text = tostring(text or "Button")
+	ensureLayout(parent)
+
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, -4, 0, 46)
+	button.BackgroundColor3 = COLORS.Card
+	button.Text = tostring(text or "Button")
+	button.Font = Enum.Font.GothamMedium
+	button.TextSize = 14
+	button.TextColor3 = COLORS.Text
+	button.TextXAlignment = Enum.TextXAlignment.Left
+	button.AutoButtonColor = false
 	button.Parent = parent
 
-	addHover(button)
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 14)
+	pad.Parent = button
+
+	corner(button, 10)
+	stroke(button)
+
+	button.MouseEnter:Connect(function()
+		tween(button, {BackgroundColor3 = COLORS.CardHover})
+	end)
+
+	button.MouseLeave:Connect(function()
+		tween(button, {BackgroundColor3 = COLORS.Card})
+	end)
 
 	button.MouseButton1Click:Connect(function()
-		safeCallback(callback)
+		safe(callback)
 	end)
 
 	return button
 end
 
-function UI:Toggle(text, parent, callback, defaultState)
-	local toggle = elements.ToggleElement:Clone()
-	toggle.TextLabel.Text = tostring(text or "Toggle")
-	toggle.Parent = parent
+function UI:Toggle(text, parent, callback, default)
+	ensureLayout(parent)
 
-	local enabled = defaultState == true
+	local button = Instance.new("TextButton")
+	button.Size = UDim2.new(1, -4, 0, 48)
+	button.BackgroundColor3 = COLORS.Card
+	button.Text = ""
+	button.AutoButtonColor = false
+	button.Parent = parent
 
-	local function updateVisual(state)
-		local bgColor = state and COLORS.Green or COLORS.Red
-		local anchor = state and Vector2.new(1, 0.5) or Vector2.new(0, 0.5)
-		local position = state and UDim2.new(1, 0, 0.5, 0) or UDim2.new(0, 0, 0.5, 0)
+	corner(button, 10)
+	stroke(button)
 
-		tween(toggle.togglebg, {
-			BackgroundColor3 = bgColor
-		}, 0.18)
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, -80, 1, 0)
+	title.Position = UDim2.fromOffset(14, 0)
+	title.BackgroundTransparency = 1
+	title.Text = tostring(text or "Toggle")
+	title.Font = Enum.Font.GothamMedium
+	title.TextSize = 14
+	title.TextColor3 = COLORS.Text
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = button
 
-		toggle.togglebg.leftrightlol.AnchorPoint = anchor
+	local bg = Instance.new("Frame")
+	bg.Size = UDim2.fromOffset(44, 22)
+	bg.Position = UDim2.new(1, -58, 0.5, -11)
+	bg.BackgroundColor3 = COLORS.Red
+	bg.Parent = button
+	corner(bg, 20)
 
-		tween(toggle.togglebg.leftrightlol, {
-			Position = position
-		}, 0.18)
+	local dot = Instance.new("Frame")
+	dot.Size = UDim2.fromOffset(18, 18)
+	dot.Position = UDim2.fromOffset(2, 2)
+	dot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	dot.Parent = bg
+	corner(dot, 20)
+
+	local enabled = default == true
+
+	local function update()
+		tween(bg, {
+			BackgroundColor3 = enabled and COLORS.Green or COLORS.Red
+		})
+
+		tween(dot, {
+			Position = enabled and UDim2.fromOffset(24, 2) or UDim2.fromOffset(2, 2)
+		})
 	end
 
-	updateVisual(enabled)
+	update()
 
-	toggle.MouseButton1Click:Connect(function()
+	button.MouseButton1Click:Connect(function()
 		enabled = not enabled
-		updateVisual(enabled)
-		safeCallback(callback, enabled)
+		update()
+		safe(callback, enabled)
 	end)
 
-	return toggle
+	return button
 end
 
 function UI:Textbox(text, parent, callback, placeholder)
-	local textbox = elements.TextboxElement:Clone()
-	textbox.TextLabel.Text = tostring(text or "Textbox")
-	textbox.Parent = parent
+	ensureLayout(parent)
 
-	if textbox:FindFirstChild("tbbg") and textbox.tbbg:FindFirstChild("Inp") then
-		textbox.tbbg.Inp.PlaceholderText = tostring(placeholder or "Enter Value...")
+	local box = Instance.new("Frame")
+	box.Size = UDim2.new(1, -4, 0, 58)
+	box.BackgroundColor3 = COLORS.Card
+	box.Parent = parent
+	corner(box, 10)
+	stroke(box)
 
-		textbox.tbbg.Inp.FocusLost:Connect(function(enterPressed)
-			safeCallback(callback, textbox.tbbg.Inp.Text, enterPressed)
-		end)
-	end
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -20, 0, 22)
+	label.Position = UDim2.fromOffset(12, 4)
+	label.BackgroundTransparency = 1
+	label.Text = tostring(text or "Textbox")
+	label.Font = Enum.Font.GothamMedium
+	label.TextSize = 13
+	label.TextColor3 = COLORS.Muted
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = box
 
-	return textbox
+	local input = Instance.new("TextBox")
+	input.Size = UDim2.new(1, -24, 0, 24)
+	input.Position = UDim2.fromOffset(12, 28)
+	input.BackgroundTransparency = 1
+	input.PlaceholderText = tostring(placeholder or "Enter value...")
+	input.Text = ""
+	input.Font = Enum.Font.Gotham
+	input.TextSize = 14
+	input.TextColor3 = COLORS.Text
+	input.TextXAlignment = Enum.TextXAlignment.Left
+	input.Parent = box
+
+	input.FocusLost:Connect(function(enterPressed)
+		safe(callback, input.Text, enterPressed)
+	end)
+
+	return box
 end
 
 function UI:Unsupported(parent, callback)
-	local unsupported = elements.unsupportElement:Clone()
-	unsupported.Parent = parent
+	ensureLayout(parent)
 
-	if unsupported:FindFirstChild("suggestbtn") then
-		unsupported.suggestbtn.MouseButton1Click:Connect(function()
-			if setclipboard then
-				setclipboard(hub.Discord)
-			end
+	self:Label("🔴 This game is not supported.", parent)
+	self:Label("Current game is not listed in XYZ - HUB.", parent)
 
-			local oldText = unsupported.suggestbtn.Text
-			unsupported.suggestbtn.Text = "Copied Discord!"
+	self:Button("Copy Discord Invite", parent, function()
+		if setclipboard then
+			setclipboard(hub.Discord)
+		end
+	end)
 
-			task.wait(1)
-
-			unsupported.suggestbtn.Text = oldText or "Suggest Game"
-		end)
-	end
-
-	if unsupported:FindFirstChild("glbtn") then
-		unsupported.glbtn.MouseButton1Click:Connect(function()
-			safeCallback(callback)
-		end)
-	end
-
-	return unsupported
+	self:Button("Open Games List", parent, callback)
 end
 
 function UI:CredHead(parent, text)
-	local header = elements.CreditHeader:Clone()
-	header.Text = "> " .. tostring(text or "Credits")
-	header.Parent = parent
+	ensureLayout(parent)
 
-	return header
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -4, 0, 34)
+	label.BackgroundTransparency = 1
+	label.Text = "> " .. tostring(text or "Credits")
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 15
+	label.TextColor3 = COLORS.Accent
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = parent
+
+	return label
 end
 
 function UI:CredPerson(parent, text)
-	local credit = elements.CreditPerson:Clone()
-	credit.Text = "      + " .. tostring(text or "Unknown")
-	credit.Parent = parent
+	ensureLayout(parent)
 
-	return credit
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -4, 0, 26)
+	label.BackgroundTransparency = 1
+	label.Text = "   + " .. tostring(text or "Unknown")
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 14
+	label.TextColor3 = COLORS.Text
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = parent
+
+	return label
 end
 
 return UI
