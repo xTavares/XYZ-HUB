@@ -1,24 +1,17 @@
 local CoreGui = game:GetService("CoreGui")
+local TweenService = game:GetService("TweenService")
 
 local env = getgenv()
 local Hub = env.XYZHub
 
 local function getParentGui()
 	local hiddenGui = gethui or get_hidden_gui
-
-	if hiddenGui then
-		return hiddenGui()
-	end
-
-	return CoreGui
+	return hiddenGui and hiddenGui() or CoreGui
 end
 
 local function loadModule(path)
 	local code = env.XYZHubLoad(path)
-
-	if not code then
-		return nil
-	end
+	if not code then return nil end
 
 	local success, result = pcall(function()
 		return loadstring(code)()
@@ -28,31 +21,200 @@ local function loadModule(path)
 		return result
 	end
 
-	warn("[XYZ - HUB] Module Error:", path, result)
+	warn("[XYZ - HUB] Module error:", path, result)
 	return nil
 end
 
-local ui = import("rbxassetid://75281832304062")
-
-if not ui then
-	warn("[XYZ - HUB] Failed to Load UI Asset.")
-	return
+local function corner(obj, radius)
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, radius or 12)
+	c.Parent = obj
 end
 
-ui.Name = "XYZ_Hub_Interface"
-ui.Parent = getParentGui()
+local function stroke(obj, color, transparency)
+	local s = Instance.new("UIStroke")
+	s.Color = color or Color3.fromRGB(75, 78, 115)
+	s.Thickness = 1
+	s.Transparency = transparency or 0.35
+	s.Parent = obj
+end
 
-local ToggleButton = ui:WaitForChild("togglebtn")
-local MainFrame = ui:WaitForChild("Frame")
+local function tween(obj, props, duration)
+	TweenService:Create(
+		obj,
+		TweenInfo.new(duration or 0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+		props
+	):Play()
+end
 
-local Topbar = MainFrame:WaitForChild("TopBar")
-local SectionContainers = MainFrame:WaitForChild("sectionContainers")
-local TabList = MainFrame:WaitForChild("tablist")
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "XYZ_Hub_Interface"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = getParentGui()
 
-local HideButton = Topbar:WaitForChild("hidebtn")
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "Frame"
+MainFrame.Size = UDim2.fromOffset(720, 430)
+MainFrame.Position = UDim2.new(0.5, -360, 0.5, -215)
+MainFrame.BackgroundColor3 = Color3.fromRGB(12, 13, 20)
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+corner(MainFrame, 16)
+stroke(MainFrame, Color3.fromRGB(105, 80, 255), 0.15)
+
+local Topbar = Instance.new("Frame")
+Topbar.Name = "TopBar"
+Topbar.Size = UDim2.new(1, 0, 0, 58)
+Topbar.BackgroundColor3 = Color3.fromRGB(17, 18, 29)
+Topbar.BorderSizePixel = 0
+Topbar.Parent = MainFrame
+corner(Topbar, 16)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -160, 0, 30)
+Title.Position = UDim2.fromOffset(22, 7)
+Title.BackgroundTransparency = 1
+Title.Text = "XYZ - HUB"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 21
+Title.TextColor3 = Color3.fromRGB(245, 246, 255)
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = Topbar
+
+local Subtitle = Instance.new("TextLabel")
+Subtitle.Size = UDim2.new(1, -160, 0, 20)
+Subtitle.Position = UDim2.fromOffset(23, 33)
+Subtitle.BackgroundTransparency = 1
+Subtitle.Text = "Modern Roblox Interface"
+Subtitle.Font = Enum.Font.Gotham
+Subtitle.TextSize = 13
+Subtitle.TextColor3 = Color3.fromRGB(145, 150, 180)
+Subtitle.TextXAlignment = Enum.TextXAlignment.Left
+Subtitle.Parent = Topbar
+
+local HideButton = Instance.new("TextButton")
+HideButton.Name = "hidebtn"
+HideButton.Size = UDim2.fromOffset(86, 32)
+HideButton.Position = UDim2.new(1, -106, 0.5, -16)
+HideButton.BackgroundColor3 = Color3.fromRGB(32, 34, 52)
+HideButton.Text = "Hide"
+HideButton.Font = Enum.Font.GothamMedium
+HideButton.TextSize = 13
+HideButton.TextColor3 = Color3.fromRGB(235, 237, 255)
+HideButton.BorderSizePixel = 0
+HideButton.AutoButtonColor = false
+HideButton.Parent = Topbar
+corner(HideButton, 10)
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "togglebtn"
+ToggleButton.Size = UDim2.fromOffset(110, 38)
+ToggleButton.Position = UDim2.new(0, 20, 0.5, -19)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(105, 80, 255)
+ToggleButton.Text = "XYZ - HUB"
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.TextSize = 14
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.BorderSizePixel = 0
+ToggleButton.AutoButtonColor = false
+ToggleButton.Visible = false
+ToggleButton.Parent = ScreenGui
+corner(ToggleButton, 12)
+
+local TabList = Instance.new("Frame")
+TabList.Name = "tablist"
+TabList.Size = UDim2.fromOffset(178, 348)
+TabList.Position = UDim2.fromOffset(14, 70)
+TabList.BackgroundColor3 = Color3.fromRGB(18, 20, 31)
+TabList.BorderSizePixel = 0
+TabList.Parent = MainFrame
+corner(TabList, 14)
+stroke(TabList, Color3.fromRGB(55, 58, 88), 0.45)
+
+local TabLayout = Instance.new("UIListLayout")
+TabLayout.Padding = UDim.new(0, 10)
+TabLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabLayout.Parent = TabList
+
+local TabPadding = Instance.new("UIPadding")
+TabPadding.PaddingTop = UDim.new(0, 14)
+TabPadding.PaddingLeft = UDim.new(0, 12)
+TabPadding.PaddingRight = UDim.new(0, 12)
+TabPadding.Parent = TabList
+
+local SectionContainers = Instance.new("Frame")
+SectionContainers.Name = "sectionContainers"
+SectionContainers.Size = UDim2.fromOffset(500, 348)
+SectionContainers.Position = UDim2.fromOffset(206, 70)
+SectionContainers.BackgroundColor3 = Color3.fromRGB(18, 20, 31)
+SectionContainers.BorderSizePixel = 0
+SectionContainers.ClipsDescendants = true
+SectionContainers.Parent = MainFrame
+corner(SectionContainers, 14)
+stroke(SectionContainers, Color3.fromRGB(55, 58, 88), 0.45)
+
+local function createTab(name, order)
+	local btn = Instance.new("TextButton")
+	btn.Name = name
+	btn.Size = UDim2.new(1, 0, 0, 43)
+	btn.BackgroundColor3 = Color3.fromRGB(27, 29, 44)
+	btn.BackgroundTransparency = 1
+	btn.Text = ""
+	btn.BorderSizePixel = 0
+	btn.AutoButtonColor = false
+	btn.LayoutOrder = order
+	btn.Parent = TabList
+	corner(btn, 11)
+
+	local bar = Instance.new("Frame")
+	bar.Name = "InnerShadow"
+	bar.Size = UDim2.fromOffset(4, 22)
+	bar.Position = UDim2.fromOffset(0, 10)
+	bar.BackgroundColor3 = Color3.fromRGB(105, 80, 255)
+	bar.BorderSizePixel = 0
+	bar.Transparency = 1
+	bar.Parent = btn
+	corner(bar, 8)
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -20, 1, 0)
+	label.Position = UDim2.fromOffset(16, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name:gsub("Tab", "")
+	label.Font = Enum.Font.GothamMedium
+	label.TextSize = 14
+	label.TextColor3 = Color3.fromRGB(225, 228, 245)
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = btn
+
+	return btn
+end
+
+local function createContainer(name)
+	local frame = Instance.new("Frame")
+	frame.Name = name
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.Position = UDim2.new(0.5, 0, 1, 0)
+	frame.AnchorPoint = Vector2.new(0.5, 0)
+	frame.BackgroundTransparency = 1
+	frame.Visible = false
+	frame.Parent = SectionContainers
+	return frame
+end
+
+local HomeTab = createTab("HomeTab", 1)
+local GameTab = createTab("GameTab", 2)
+local GameslistTab = createTab("GameslistTab", 3)
+local SettingsTab = createTab("SettingsTab", 4)
+local CreditsTab = createTab("CreditsTab", 5)
+
+local homeframe = createContainer("homeframe")
+local gameFrame = createContainer("gameFrame")
+local gamelistFrame = createContainer("gamelistFrame")
+local settingsFrame = createContainer("settingsFrame")
+local creditsFrame = createContainer("creditsFrame")
 
 local Elements = loadModule(getgitpath("src") .. "elements.lua")
-
 local Utils = loadModule(getgitpath("modules") .. "utils.lua")
 local Dragging = loadModule(getgitpath("modules") .. "dragging.lua")
 local TabsModule = loadModule(getgitpath("modules") .. "tabs.lua")
@@ -67,88 +229,57 @@ local SettingsPage = loadModule(getgitpath("pages") .. "settings.lua")
 local CreditsPage = loadModule(getgitpath("pages") .. "credits.lua")
 
 if not Elements or not Utils or not Dragging or not TabsModule then
-	warn("[XYZ - HUB] Core Modules Failed to Load.")
-	return
-end
-
-if not Games or not Credits then
-	warn("[XYZ - HUB] Data Files Failed to Load.")
-	return
-end
-
-if not HomePage or not GamePage or not GameListPage or not SettingsPage or not CreditsPage then
-	warn("[XYZ - HUB] Page Files Failed to Load.")
+	warn("[XYZ - HUB] Core modules failed.")
 	return
 end
 
 local Sections = {
-	Home = {
-		TabBtn = TabList:WaitForChild("HomeTab"),
-		Container = SectionContainers:WaitForChild("homeframe")
-	},
-
-	Game = {
-		TabBtn = TabList:WaitForChild("GameTab"),
-		Container = SectionContainers:WaitForChild("gameFrame")
-	},
-
-	GamesList = {
-		TabBtn = TabList:WaitForChild("GameslistTab"),
-		Container = SectionContainers:WaitForChild("gamelistFrame")
-	},
-
-	Settings = {
-		TabBtn = TabList:WaitForChild("SettingsTab"),
-		Container = SectionContainers:WaitForChild("settingsFrame")
-	},
-
-	Credits = {
-		TabBtn = TabList:WaitForChild("CreditsTab"),
-		Container = SectionContainers:WaitForChild("creditsFrame")
-	}
+	Home = { TabBtn = HomeTab, Container = homeframe },
+	Game = { TabBtn = GameTab, Container = gameFrame },
+	GamesList = { TabBtn = GameslistTab, Container = gamelistFrame },
+	Settings = { TabBtn = SettingsTab, Container = settingsFrame },
+	Credits = { TabBtn = CreditsTab, Container = creditsFrame }
 }
 
 local Tabs = TabsModule:Create(Sections, Utils)
 
 local context = {
 	Hub = Hub,
-	UI = ui,
+	UI = ScreenGui,
 	MainFrame = MainFrame,
 	ToggleButton = ToggleButton,
 	Sections = Sections,
 	Elements = Elements,
 	Utils = Utils,
 	Tabs = Tabs,
-	Games = Games,
-	Credits = Credits
+	Games = Games or {},
+	Credits = Credits or {}
 }
 
-local function renderAllPages()
-	HomePage:Render(context)
-	GamePage:Render(context)
-	GameListPage:Render(context)
-	SettingsPage:Render(context)
-	CreditsPage:Render(context)
-end
+HideButton.MouseEnter:Connect(function()
+	tween(HideButton, {BackgroundColor3 = Color3.fromRGB(45, 47, 70)})
+end)
 
-local function setupVisibility()
-	ToggleButton.Visible = false
+HideButton.MouseLeave:Connect(function()
+	tween(HideButton, {BackgroundColor3 = Color3.fromRGB(32, 34, 52)})
+end)
+
+HideButton.MouseButton1Click:Connect(function()
+	MainFrame.Visible = false
+	ToggleButton.Visible = true
+end)
+
+ToggleButton.MouseButton1Click:Connect(function()
 	MainFrame.Visible = true
+	ToggleButton.Visible = false
+end)
 
-	HideButton.MouseButton1Click:Connect(function()
-		MainFrame.Visible = false
-		ToggleButton.Visible = true
-	end)
-
-	ToggleButton.MouseButton1Click:Connect(function()
-		MainFrame.Visible = true
-		ToggleButton.Visible = false
-	end)
-end
-
-setupVisibility()
 Dragging:MakeDraggable(MainFrame)
 
-renderAllPages()
+HomePage:Render(context)
+GamePage:Render(context)
+GameListPage:Render(context)
+SettingsPage:Render(context)
+CreditsPage:Render(context)
 
 Tabs:Init(Sections.Home)
