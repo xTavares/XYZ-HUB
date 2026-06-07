@@ -302,4 +302,189 @@ function UI:CredPerson(parent, text)
 	return label
 end
 
+function UI:GetTheme()
+	local env = getgenv()
+	if env.XYZHubTheme then
+		return env.XYZHubTheme
+	end
+
+	return {
+		Accent = Color3.fromRGB(126, 87, 255),
+		Card = Color3.fromRGB(30, 31, 48),
+		Hover = Color3.fromRGB(42, 44, 68),
+		Text = Color3.fromRGB(242, 244, 255),
+		Muted = Color3.fromRGB(150, 155, 185),
+		Green = Color3.fromRGB(90, 220, 120),
+		Red = Color3.fromRGB(230, 80, 90)
+	}
+end
+
+function UI:Hero(parent, title, subtitle)
+	ensureLayout(parent)
+
+	local theme = self:GetTheme()
+
+	local card = Instance.new("Frame")
+	card.Size = UDim2.new(1, -4, 0, 82)
+	card.BackgroundColor3 = theme.Card
+	card.BorderSizePixel = 0
+	card.Parent = parent
+
+	corner(card, 14)
+	stroke(card)
+
+	local accent = Instance.new("Frame")
+	accent.Size = UDim2.fromOffset(5, 48)
+	accent.Position = UDim2.fromOffset(14, 17)
+	accent.BackgroundColor3 = theme.Accent
+	accent.BorderSizePixel = 0
+	accent.Parent = card
+	corner(accent, 10)
+
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Size = UDim2.new(1, -50, 0, 32)
+	titleLabel.Position = UDim2.fromOffset(30, 13)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = tostring(title or "")
+	titleLabel.Font = Enum.Font.GothamBold
+	titleLabel.TextSize = 20
+	titleLabel.TextColor3 = theme.Text
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.Parent = card
+
+	local subLabel = Instance.new("TextLabel")
+	subLabel.Size = UDim2.new(1, -50, 0, 24)
+	subLabel.Position = UDim2.fromOffset(31, 44)
+	subLabel.BackgroundTransparency = 1
+	subLabel.Text = tostring(subtitle or "")
+	subLabel.Font = Enum.Font.Gotham
+	subLabel.TextSize = 13
+	subLabel.TextColor3 = theme.Muted
+	subLabel.TextXAlignment = Enum.TextXAlignment.Left
+	subLabel.Parent = card
+
+	return card
+end
+
+function UI:SectionTitle(parent, text)
+	ensureLayout(parent)
+
+	local theme = self:GetTheme()
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -4, 0, 32)
+	label.BackgroundTransparency = 1
+	label.Text = tostring(text or "Section")
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 15
+	label.TextColor3 = theme.Accent
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = parent
+
+	return label
+end
+
+function UI:StatCard(parent, title, value, icon)
+	ensureLayout(parent)
+
+	local theme = self:GetTheme()
+
+	local card = Instance.new("Frame")
+	card.Size = UDim2.new(1, -4, 0, 66)
+	card.BackgroundColor3 = theme.Card
+	card.BorderSizePixel = 0
+	card.Parent = parent
+
+	corner(card, 13)
+	stroke(card)
+
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Size = UDim2.fromOffset(42, 42)
+	iconLabel.Position = UDim2.fromOffset(12, 12)
+	iconLabel.BackgroundColor3 = theme.Accent
+	iconLabel.Text = tostring(icon or "•")
+	iconLabel.Font = Enum.Font.GothamBold
+	iconLabel.TextSize = 18
+	iconLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	iconLabel.BorderSizePixel = 0
+	iconLabel.Parent = card
+	corner(iconLabel, 12)
+
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Size = UDim2.new(1, -74, 0, 22)
+	titleLabel.Position = UDim2.fromOffset(64, 11)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = tostring(title or "")
+	titleLabel.Font = Enum.Font.GothamMedium
+	titleLabel.TextSize = 13
+	titleLabel.TextColor3 = theme.Muted
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.Parent = card
+
+	local valueLabel = Instance.new("TextLabel")
+	valueLabel.Size = UDim2.new(1, -74, 0, 26)
+	valueLabel.Position = UDim2.fromOffset(64, 32)
+	valueLabel.BackgroundTransparency = 1
+	valueLabel.Text = tostring(value or "")
+	valueLabel.Font = Enum.Font.GothamBold
+	valueLabel.TextSize = 15
+	valueLabel.TextColor3 = theme.Text
+	valueLabel.TextXAlignment = Enum.TextXAlignment.Left
+	valueLabel.TextTruncate = Enum.TextTruncate.AtEnd
+	valueLabel.Parent = card
+
+	return card
+end
+
+function UI:ProfileCard(parent, name, role)
+	ensureLayout(parent)
+
+	local theme = self:GetTheme()
+
+	local card = Instance.new("Frame")
+	card.Size = UDim2.new(1, -4, 0, 58)
+	card.BackgroundColor3 = theme.Card
+	card.BorderSizePixel = 0
+	card.Parent = parent
+
+	corner(card, 13)
+	stroke(card)
+
+	local avatar = Instance.new("TextLabel")
+	avatar.Size = UDim2.fromOffset(36, 36)
+	avatar.Position = UDim2.fromOffset(12, 11)
+	avatar.BackgroundColor3 = theme.Accent
+	avatar.Text = string.sub(tostring(name), 1, 1):upper()
+	avatar.Font = Enum.Font.GothamBold
+	avatar.TextSize = 16
+	avatar.TextColor3 = Color3.fromRGB(255, 255, 255)
+	avatar.BorderSizePixel = 0
+	avatar.Parent = card
+	corner(avatar, 50)
+
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(1, -70, 0, 24)
+	nameLabel.Position = UDim2.fromOffset(60, 8)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = tostring(name or "Unknown")
+	nameLabel.Font = Enum.Font.GothamBold
+	nameLabel.TextSize = 14
+	nameLabel.TextColor3 = theme.Text
+	nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+	nameLabel.Parent = card
+
+	local roleLabel = Instance.new("TextLabel")
+	roleLabel.Size = UDim2.new(1, -70, 0, 20)
+	roleLabel.Position = UDim2.fromOffset(60, 31)
+	roleLabel.BackgroundTransparency = 1
+	roleLabel.Text = tostring(role or "Contributor")
+	roleLabel.Font = Enum.Font.Gotham
+	roleLabel.TextSize = 12
+	roleLabel.TextColor3 = theme.Muted
+	roleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	roleLabel.Parent = card
+
+	return card
+end
+
 return UI
