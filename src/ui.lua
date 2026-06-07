@@ -296,8 +296,11 @@ local context = {
 	Utils = Utils,
 	Tabs = Tabs,
 	Theme = Theme,
+	SettingsStore = SettingsStore,
+	Settings = Settings,
 	Games = Games or {},
 	Credits = Credits or {}
+
 }
 
 HideButton.MouseEnter:Connect(function()
