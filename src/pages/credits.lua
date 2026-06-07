@@ -8,11 +8,13 @@ function CreditsPage:Render(context)
 
 	Utils:Clear(container)
 
+	Elements:Hero(container, "Credits", "People Behind XYZ - HUB")
+
 	for role, people in pairs(Credits) do
-		Elements:CredHead(container, role)
+		Elements:SectionTitle(container, role)
 
 		for _, person in ipairs(people) do
-			Elements:CredPerson(container, person)
+			Elements:ProfileCard(container, person, role)
 		end
 	end
 end
