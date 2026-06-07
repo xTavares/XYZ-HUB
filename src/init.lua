@@ -9,6 +9,7 @@ env.XYZHub.Name = HUB_NAME
 env.XYZHub.Folder = HUB_FOLDER
 env.XYZHub.Discord = "https://discord.gg/3DraReZnUz"
 env.XYZHub.RawBase = RAW_BASE
+env.XYZHub.AutoRejoin = env.XYZHub.AutoRejoin or false
 
 if not isfolder(HUB_FOLDER) then
 	makefolder(HUB_FOLDER)
@@ -23,7 +24,7 @@ function env.import(assetId)
 		return objects[1]
 	end
 
-	warn("[XYZ - HUB] Failed to Import Asset:", assetId)
+	warn("[XYZ - HUB] Failed to import asset:", assetId)
 	return nil
 end
 
@@ -36,6 +37,8 @@ function env.getgitpath(pathType)
 		return RAW_BASE .. "src/modules/"
 	elseif pathType == "data" then
 		return RAW_BASE .. "src/data/"
+	elseif pathType == "games" then
+		return RAW_BASE .. "src/games/"
 	end
 
 	return RAW_BASE
@@ -46,15 +49,18 @@ function env.XYZHubLoad(path)
 		return game:HttpGet(path)
 	end)
 
-	if not success or not result or result == "" or result == "404: Not Found" then
-		warn("[XYZ - HUB] Failed to Load:", path)
+	if not success then
+		warn("[XYZ - HUB] HTTP error:", path, result)
+		return nil
+	end
+
+	if not result or result == "" or result == "404: Not Found" then
+		warn("[XYZ - HUB] Failed to load:", path)
 		return nil
 	end
 
 	return result
 end
-
-env.XYZHub.AutoRejoin = env.XYZHub.AutoRejoin or false
 
 game:GetService("GuiService").ErrorMessageChanged:Connect(function()
 	if env.XYZHub.AutoRejoin then
@@ -72,6 +78,6 @@ if uiCode then
 	end)
 
 	if not success then
-		warn("[XYZ - HUB] UI Error:", err)
+		warn("[XYZ - HUB] UI error:", err)
 	end
 end
