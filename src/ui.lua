@@ -200,25 +200,13 @@ local function createContainer(name)
 	scroll.BorderSizePixel = 0
 	scroll.Visible = false
 	scroll.ClipsDescendants = true
-	scroll.ScrollBarThickness = 4
+	scroll.ScrollingEnabled = true
+	scroll.ScrollBarThickness = 5
 	scroll.ScrollBarImageColor3 = Color3.fromRGB(105, 80, 255)
-	scroll.ScrollBarImageTransparency = 0.15
 	scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-	scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 	scroll.ScrollingDirection = Enum.ScrollingDirection.Y
 	scroll.Parent = SectionContainers
-
-	local layout = Instance.new("UIListLayout")
-	layout.Padding = UDim.new(0, 10)
-	layout.SortOrder = Enum.SortOrder.LayoutOrder
-	layout.Parent = scroll
-
-	local padding = Instance.new("UIPadding")
-	padding.PaddingTop = UDim.new(0, 16)
-	padding.PaddingLeft = UDim.new(0, 16)
-	padding.PaddingRight = UDim.new(0, 16)
-	padding.PaddingBottom = UDim.new(0, 16)
-	padding.Parent = scroll
 
 	return scroll
 end
