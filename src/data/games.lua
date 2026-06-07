@@ -1,9 +1,7 @@
-local Games = {
+return {
 	{
-		name = "Reel for Brainrots",
-		placeId = 106772177198260,
+		name = "Reel for brainrots",
+		placeId = "106772177198260",
 		status = "🟢"
 	}
 }
-
-return Games
