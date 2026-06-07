@@ -237,6 +237,8 @@ local GameListPage = loadModule(getgitpath("pages") .. "gamelist.lua")
 local SettingsPage = loadModule(getgitpath("pages") .. "settings.lua")
 local CreditsPage = loadModule(getgitpath("pages") .. "credits.lua")
 
+local Theme = loadModule(getgitpath("modules") .. "theme.lua")
+
 if not Elements or not Utils or not Dragging or not TabsModule then
 	warn("[XYZ - HUB] Core modules failed.")
 	return
