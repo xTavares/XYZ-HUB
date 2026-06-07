@@ -4,23 +4,25 @@ local Dragging = {}
 
 function Dragging:MakeDraggable(guiObject)
 	local dragging = false
-	local moved = false
-	local dragInput
-	local startMouse
-	local startPosition
+	local wasDragged = false
+	local dragInput = nil
+	local startMouse = nil
+	local startPosition = nil
 
 	guiObject.Active = true
 
 	guiObject.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
-			moved = false
+			wasDragged = false
 			startMouse = input.Position
 			startPosition = guiObject.Position
 
 			input.Changed:Connect(function()
 				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
+					task.delay(0.05, function()
+						dragging = false
+					end)
 				end
 			end)
 		end
@@ -33,11 +35,11 @@ function Dragging:MakeDraggable(guiObject)
 	end)
 
 	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input == dragInput then
+		if dragging and input == dragInput and startMouse and startPosition then
 			local delta = input.Position - startMouse
 
-			if math.abs(delta.X) > 3 or math.abs(delta.Y) > 3 then
-				moved = true
+			if math.abs(delta.X) > 4 or math.abs(delta.Y) > 4 then
+				wasDragged = true
 			end
 
 			guiObject.Position = UDim2.new(
@@ -49,11 +51,8 @@ function Dragging:MakeDraggable(guiObject)
 		end
 	end)
 
-	function guiObject:GetAttribute()
-	end
-
 	return function()
-		return moved
+		return wasDragged
 	end
 end
 
