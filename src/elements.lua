@@ -22,12 +22,22 @@ local function ensureLayout(parent)
 		layout.Padding = UDim.new(0, 10)
 		layout.SortOrder = Enum.SortOrder.LayoutOrder
 		layout.Parent = parent
+	end
 
+	if not parent:FindFirstChildOfClass("UIPadding") then
 		local padding = Instance.new("UIPadding")
-		padding.PaddingTop = UDim.new(0, 14)
-		padding.PaddingLeft = UDim.new(0, 14)
-		padding.PaddingRight = UDim.new(0, 14)
+		padding.PaddingTop = UDim.new(0, 16)
+		padding.PaddingLeft = UDim.new(0, 16)
+		padding.PaddingRight = UDim.new(0, 16)
+		padding.PaddingBottom = UDim.new(0, 16)
 		padding.Parent = parent
+	end
+
+	if parent:IsA("ScrollingFrame") then
+		parent.AutomaticCanvasSize = Enum.AutomaticSize.Y
+		parent.CanvasSize = UDim2.new(0, 0, 0, 0)
+		parent.ScrollBarThickness = 4
+		parent.ScrollingDirection = Enum.ScrollingDirection.Y
 	end
 end
 
@@ -66,15 +76,25 @@ function UI:Label(text, parent)
 	ensureLayout(parent)
 
 	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, -4, 0, 32)
-	label.BackgroundTransparency = 1
+	label.Size = UDim2.new(1, -4, 0, 34)
+	label.BackgroundColor3 = COLORS.Card
 	label.Text = tostring(text or "")
 	label.Font = Enum.Font.GothamMedium
 	label.TextSize = 14
 	label.TextColor3 = COLORS.Text
 	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Center
 	label.TextWrapped = true
+	label.BorderSizePixel = 0
 	label.Parent = parent
+
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft = UDim.new(0, 14)
+	pad.PaddingRight = UDim.new(0, 14)
+	pad.Parent = label
+
+	corner(label, 10)
+	stroke(label)
 
 	return label
 end
