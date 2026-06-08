@@ -38,9 +38,28 @@ function GamePage:Render(context)
 		return
 	end
 
-	local success, gameModule = pcall(function()
-		return loadstring(code)()
-	end)
+local success, gameModule = pcall(function()
+	local loaded = loadstring(code)
+
+	if typeof(loaded) ~= "function" then
+		return nil
+	end
+
+	return loaded()
+end)
+
+if not success then
+	Elements:StatCard(container, "Module Error", tostring(gameModule), "🔴")
+	Elements:Label("URL: " .. moduleUrl, container)
+	return
+end
+
+if typeof(gameModule) ~= "function" then
+	Elements:StatCard(container, "Module", "Did not Return Function", "🔴")
+	Elements:Label("Returned type: " .. typeof(gameModule), container)
+	Elements:Label("URL: " .. moduleUrl, container)
+	return
+end
 
 	if not success then
 		Elements:StatCard(container, "Module Error", tostring(gameModule), "🔴")
