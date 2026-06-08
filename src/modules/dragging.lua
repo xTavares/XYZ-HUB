@@ -1,37 +1,46 @@
--- hack vault for brainrots
+local Tabs = {}
 
-return function(section)
-    local elements = loadstring(game:HttpGet(getgitpath("src").."elements.lua"))()
+function Tabs:Create(sections, utils)
+	local controller = {}
+	controller.CurrentSection = nil
 
-    local plr = game:GetService("Players").LocalPlayer
-    getgenv().FarmRots = false
+	function controller:Switch(section)
+		if self.CurrentSection == section then return end
 
-    elements:Toggle("Farm Brainrots", section, function(v)
-        if v then
-            getgenv().FarmRots = true
+		if self.CurrentSection then
+			self.CurrentSection.TabBtn.BackgroundTransparency = 1
+			utils:Tween(self.CurrentSection.Container, {
+				Position = UDim2.new(0.5, 0, 1, 0)
+			}, 0.18)
+		end
 
-            while getgenv().FarmRots do
-                for _, br in pairs(workspace.EntitiesFolder:GetChildren()) do
-                    plr.Character:MoveTo(Vector3.new(-2494, 4, -726))
-                    task.wait(0.5)
-                    if not br:GetAttribute("SpawnZone") == 22 then
-                        continue
-                    end
+		section.Container.Visible = true
+		section.TabBtn.BackgroundTransparency = 0
 
-                    if not br.PrimaryPart then
-                        continue
-                    end
+		utils:Tween(section.Container, {
+			Position = UDim2.new(0.5, 0, 0, 0)
+		}, 0.18)
 
-                    plr.Character:MoveTo(br.PrimaryPart.Position)
-                    task.wait()
-                    repeat fireproximityprompt(br.PrimaryPart.TakeBrainrotPrompt) task.wait() until not br.PrimaryPart or br.PrimaryPart:FindFirstChild("Attachment")
-                    plr.Character:MoveTo(Vector3.new(77, 4, -729))
-                    task.wait(1)
-                end
-                task.wait()
-            end
-        else
-            getgenv().FarmRots = false
-        end
-    end)
+		self.CurrentSection = section
+	end
+
+	function controller:Init(defaultSection)
+		for _, section in pairs(sections) do
+			section.TabBtn.BackgroundTransparency = 1
+			section.Container.Visible = false
+			section.Container.Position = UDim2.new(0.5, 0, 1, 0)
+
+			section.TabBtn.MouseButton1Click:Connect(function()
+				self:Switch(section)
+			end)
+		end
+
+		if defaultSection then
+			self:Switch(defaultSection)
+		end
+	end
+
+	return controller
 end
+
+return Tabs
