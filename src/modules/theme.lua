@@ -12,7 +12,6 @@ Theme.Presets = {
 		Text = Color3.fromRGB(242, 244, 255),
 		Muted = Color3.fromRGB(150, 155, 185)
 	},
-
 	Midnight = {
 		Accent = Color3.fromRGB(80, 120, 255),
 		Bg = Color3.fromRGB(7, 10, 18),
@@ -22,7 +21,6 @@ Theme.Presets = {
 		Text = Color3.fromRGB(235, 242, 255),
 		Muted = Color3.fromRGB(135, 150, 180)
 	},
-
 	Ocean = {
 		Accent = Color3.fromRGB(65, 185, 255),
 		Bg = Color3.fromRGB(7, 15, 22),
@@ -32,7 +30,6 @@ Theme.Presets = {
 		Text = Color3.fromRGB(235, 250, 255),
 		Muted = Color3.fromRGB(135, 175, 195)
 	},
-
 	Emerald = {
 		Accent = Color3.fromRGB(80, 220, 145),
 		Bg = Color3.fromRGB(8, 18, 14),
@@ -42,7 +39,6 @@ Theme.Presets = {
 		Text = Color3.fromRGB(238, 255, 247),
 		Muted = Color3.fromRGB(140, 190, 165)
 	},
-
 	Rose = {
 		Accent = Color3.fromRGB(255, 90, 160),
 		Bg = Color3.fromRGB(20, 10, 18),
@@ -66,5 +62,7 @@ function Theme:Set(name)
 	getgenv().XYZHubTheme = self:Get()
 	return self:Get()
 end
+
+Theme:Set("Purple")
 
 return Theme
