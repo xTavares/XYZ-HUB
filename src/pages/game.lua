@@ -9,7 +9,7 @@ function GamePage:Render(context)
 	Utils:Clear(container)
 
 	local currentPlaceId = tostring(game.PlaceId)
-	local currentGame
+	local currentGame = nil
 
 	for _, gameData in ipairs(Games) do
 		if tostring(gameData.placeId) == currentPlaceId then
@@ -19,23 +19,22 @@ function GamePage:Render(context)
 	end
 
 	if not currentGame then
-		Elements:Hero(container, "Unsupported Game", "This game is not registered in XYZ - HUB.")
+		Elements:Hero(container, "Unsupported Game", "This Game is not Registered in XYZ - HUB.")
 		Elements:StatCard(container, "Current PlaceId", currentPlaceId, "🔴")
-		Elements:StatCard(container, "Status", "Not Supported", "⚠️")
+		Elements:StatCard(container, "Games Loaded", tostring(#Games), "📋")
 		return
 	end
 
-	Elements:Hero(container, currentGame.name, "Premium module interface")
+	Elements:Hero(container, currentGame.name, "Premium Module Interface")
 	Elements:StatCard(container, "Status", (currentGame.status or "🟢") .. " Supported", "🎮")
 	Elements:StatCard(container, "PlaceId", currentPlaceId, "🧩")
-
-	Elements:SectionTitle(container, "Modules")
 
 	local moduleUrl = getgitpath("games") .. currentPlaceId .. ".lua"
 	local code = getgenv().XYZHubLoad(moduleUrl)
 
 	if not code then
-		Elements:StatCard(container, "Module", "No module found", "⚠️")
+		Elements:StatCard(container, "Module", "No Module Found", "⚠️")
+		Elements:Label("Expected file: src/games/" .. currentPlaceId .. ".lua", container)
 		return
 	end
 
@@ -49,9 +48,11 @@ function GamePage:Render(context)
 	end
 
 	if typeof(gameModule) ~= "function" then
-		Elements:StatCard(container, "Module", "Did not return function", "🔴")
+		Elements:StatCard(container, "Module", "Did not Return Function", "🔴")
 		return
 	end
+
+	Elements:SectionTitle(container, "Modules")
 
 	local runSuccess, runError = pcall(function()
 		gameModule(container, context)
