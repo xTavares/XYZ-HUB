@@ -1,31 +1,47 @@
-local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
-local Utils = {}
+local Dragging = {}
 
-function Utils:Tween(object, properties, duration)
-	TweenService:Create(
-		object,
-		TweenInfo.new(duration or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		properties
-	):Play()
-end
+function Dragging:MakeDraggable(guiObject)
+	local dragging = false
+	local dragInput
+	local mouseStart
+	local frameStart
 
-function Utils:Clear(container)
-	for _, child in ipairs(container:GetChildren()) do
-		if child:IsA("GuiObject") then
-			child:Destroy()
+	guiObject.Active = true
+
+	guiObject.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			mouseStart = input.Position
+			frameStart = guiObject.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
 		end
-	end
-end
+	end)
 
-function Utils:SafeCall(callback, ...)
-	if typeof(callback) == "function" then
-		local success, err = pcall(callback, ...)
-
-		if not success then
-			warn("[XYZ - HUB] Callback error:", err)
+	guiObject.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
 		end
-	end
+	end)
+
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input == dragInput and mouseStart and frameStart then
+			local delta = input.Position - mouseStart
+
+			guiObject.Position = UDim2.new(
+				frameStart.X.Scale,
+				frameStart.X.Offset + delta.X,
+				frameStart.Y.Scale,
+				frameStart.Y.Offset + delta.Y
+			)
+		end
+	end)
 end
 
-return Utils
+return Dragging
