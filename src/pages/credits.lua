@@ -8,7 +8,7 @@ function CreditsPage:Render(context)
 
 	Utils:Clear(container)
 
-	Elements:Hero(container, "Credits", "People Behind XYZ - HUB")
+	Elements:Hero(container, "Credits", "People behind XYZ - HUB")
 
 	for role, people in pairs(Credits) do
 		Elements:SectionTitle(container, role)
