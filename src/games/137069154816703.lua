@@ -1,38 +1,82 @@
 -- Hack Vault for Brainrots
--- hack vault for brainrots
 
-return function(section)
-    local elements = loadstring(game:HttpGet(getgitpath("src").."elements.lua"))()
+return function(section, context)
+	local elements = context.Elements
+	local Players = game:GetService("Players")
+	local plr = Players.LocalPlayer
 
-    local plr = game:GetService("Players").LocalPlayer
-    getgenv().FarmRots = false
+	getgenv().FarmRots = false
 
-    elements:Toggle("Farm Brainrots", section, function(v)
-        if v then
-            getgenv().FarmRots = true
+	local function getPrompt(model)
+		for _, obj in ipairs(model:GetDescendants()) do
+			if obj:IsA("ProximityPrompt") and obj.Name == "TakeBrainrotPrompt" then
+				return obj
+			end
+		end
 
-            while getgenv().FarmRots do
-                for _, br in pairs(workspace.EntitiesFolder:GetChildren()) do
-                    plr.Character:MoveTo(Vector3.new(-2494, 4, -726))
-                    task.wait(0.5)
-                    if not br:GetAttribute("SpawnZone") == 22 then
-                        continue
-                    end
+		return nil
+	end
 
-                    if not br.PrimaryPart then
-                        continue
-                    end
+	elements:Toggle("Farm Brainrots", section, function(enabled)
+		getgenv().FarmRots = enabled
 
-                    plr.Character:MoveTo(br.PrimaryPart.Position)
-                    task.wait()
-                    repeat fireproximityprompt(br.PrimaryPart.TakeBrainrotPrompt) task.wait() until not br.PrimaryPart or br.PrimaryPart:FindFirstChild("Attachment")
-                    plr.Character:MoveTo(Vector3.new(77, 4, -729))
-                    task.wait(1)
-                end
-                task.wait()
-            end
-        else
-            getgenv().FarmRots = false
-        end
-    end)
+		if not enabled then
+			return
+		end
+
+		task.spawn(function()
+			while getgenv().FarmRots do
+				local char = plr.Character
+				if not char then
+					task.wait(1)
+					continue
+				end
+
+				local folder = workspace:FindFirstChild("EntitiesFolder")
+				if not folder then
+					warn("[XYZ - HUB] EntitiesFolder not found")
+					task.wait(1)
+					continue
+				end
+
+				for _, br in ipairs(folder:GetChildren()) do
+					if not getgenv().FarmRots then
+						break
+					end
+
+					if br:GetAttribute("SpawnZone") ~= 22 then
+						continue
+					end
+
+					local part = br.PrimaryPart or br:FindFirstChildWhichIsA("BasePart", true)
+					if not part then
+						continue
+					end
+
+					local prompt = getPrompt(br)
+					if not prompt then
+						warn("[XYZ - HUB] Prompt not found:", br.Name)
+						continue
+					end
+
+					char:MoveTo(Vector3.new(-2494, 4, -726))
+					task.wait(0.4)
+
+					char:MoveTo(part.Position)
+					task.wait(0.4)
+
+					pcall(function()
+						fireproximityprompt(prompt)
+					end)
+
+					task.wait(0.4)
+
+					char:MoveTo(Vector3.new(77, 4, -729))
+					task.wait(1)
+				end
+
+				task.wait(0.2)
+			end
+		end)
+	end)
 end
