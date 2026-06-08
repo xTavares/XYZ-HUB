@@ -9,8 +9,7 @@ function Home:Render(context)
 
 	Utils:Clear(container)
 
-	Elements:Hero(container, "XYZ - HUB", "Professional Roblox Hub Interface")
-
+	Elements:Hero(container, "XYZ - HUB", "Professional Roblox hub interface")
 	Elements:StatCard(container, "Supported Games", tostring(#Games), "🟢")
 	Elements:StatCard(container, "Status", "Online", "⚡")
 	Elements:StatCard(container, "Discord", Hub.Discord, "💬")
@@ -18,8 +17,8 @@ function Home:Render(context)
 	local executorName = "Roblox"
 
 	if identifyexecutor then
-		local success, result = pcall(identifyexecutor)
-		if success and result then
+		local ok, result = pcall(identifyexecutor)
+		if ok and result then
 			executorName = result
 		end
 	end
