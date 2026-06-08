@@ -1,5 +1,6 @@
 -- Hack Vault for Brainrots
 -- XYZ - HUB adapted module
+-- Zone 20+ filter added
 
 return function(section, context)
 	local elements = context.Elements
@@ -16,7 +17,9 @@ return function(section, context)
 					plr.Character:MoveTo(Vector3.new(-2494, 4, -726))
 					task.wait(0.5)
 
-					if not br:GetAttribute("SpawnZone") == 22 then
+					-- ✅ FILTER: Apenas zones 20 ou superior
+					local spawnZone = br:GetAttribute("SpawnZone")
+					if not spawnZone or spawnZone < 20 then
 						continue
 					end
 
