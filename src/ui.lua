@@ -243,7 +243,48 @@ local Sections = {
 	Credits = { TabBtn = CreditsTab, Container = creditsFrame }
 }
 
-local Tabs = TabsModule:Create(Sections, Utils)
+local Tabs = {}
+Tabs.CurrentSection = nil
+
+function Tabs:HideAll()
+	for _, section in pairs(Sections) do
+		section.Container.Visible = false
+		section.Container.Position = UDim2.new(0.5, 0, 1, 0)
+		section.TabBtn.BackgroundTransparency = 1
+
+		local shadow = section.TabBtn:FindFirstChild("InnerShadow")
+		if shadow then
+			shadow.Transparency = 1
+		end
+	end
+end
+
+function Tabs:Switch(section)
+	self:HideAll()
+
+	section.Container.Visible = true
+	section.Container.Position = UDim2.new(0.5, 0, 0, 0)
+	section.TabBtn.BackgroundTransparency = 0
+
+	local shadow = section.TabBtn:FindFirstChild("InnerShadow")
+	if shadow then
+		shadow.Transparency = 0
+	end
+
+	self.CurrentSection = section
+end
+
+function Tabs:Init(defaultSection)
+	self:HideAll()
+
+	for _, section in pairs(Sections) do
+		section.TabBtn.MouseButton1Click:Connect(function()
+			self:Switch(section)
+		end)
+	end
+
+	self:Switch(defaultSection)
+end
 
 local context = {
 	Hub = Hub,
