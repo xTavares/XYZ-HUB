@@ -13,13 +13,11 @@ local function loadModule(path)
 	local code = env.XYZHubLoad(path)
 	if not code then return nil end
 
-	local success, result = pcall(function()
+	local ok, result = pcall(function()
 		return loadstring(code)()
 	end)
 
-	if success then
-		return result
-	end
+	if ok then return result end
 
 	warn("[XYZ - HUB] Module error:", path, result)
 	return nil
@@ -39,17 +37,11 @@ local function stroke(obj, color, transparency)
 	s.Parent = obj
 end
 
-local function tween(obj, props, duration)
-	TweenService:Create(
-		obj,
-		TweenInfo.new(duration or 0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		props
-	):Play()
-end
-
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "XYZ_Hub_Interface"
 ScreenGui.ResetOnSpawn = false
+ScreenGui.DisplayOrder = 999
+ScreenGui.IgnoreGuiInset = true
 ScreenGui.Parent = getParentGui()
 
 local MainFrame = Instance.new("Frame")
@@ -118,8 +110,6 @@ ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.BorderSizePixel = 0
 ToggleButton.AutoButtonColor = false
 ToggleButton.Visible = false
-ToggleButton.Active = true
-ToggleButton.Draggable = false
 ToggleButton.Parent = ScreenGui
 corner(ToggleButton, 12)
 stroke(ToggleButton, Color3.fromRGB(145, 125, 255), 0.15)
@@ -156,9 +146,9 @@ SectionContainers.Parent = MainFrame
 corner(SectionContainers, 14)
 stroke(SectionContainers, Color3.fromRGB(55, 58, 88), 0.45)
 
-local function createTab(name, order)
+local function createTab(text, order)
 	local btn = Instance.new("TextButton")
-	btn.Name = name
+	btn.Name = text .. "Tab"
 	btn.Size = UDim2.new(1, 0, 0, 43)
 	btn.BackgroundColor3 = Color3.fromRGB(27, 29, 44)
 	btn.BackgroundTransparency = 1
@@ -183,7 +173,7 @@ local function createTab(name, order)
 	label.Size = UDim2.new(1, -20, 1, 0)
 	label.Position = UDim2.fromOffset(16, 0)
 	label.BackgroundTransparency = 1
-	label.Text = name:gsub("Tab", "")
+	label.Text = text
 	label.Font = Enum.Font.GothamMedium
 	label.TextSize = 14
 	label.TextColor3 = Color3.fromRGB(225, 228, 245)
@@ -210,15 +200,14 @@ local function createContainer(name)
 	scroll.AutomaticCanvasSize = Enum.AutomaticSize.None
 	scroll.ScrollingDirection = Enum.ScrollingDirection.Y
 	scroll.Parent = SectionContainers
-
 	return scroll
 end
 
-local HomeTab = createTab("HomeTab", 1)
-local GameTab = createTab("GameTab", 2)
-local GameslistTab = createTab("GameslistTab", 3)
-local SettingsTab = createTab("SettingsTab", 4)
-local CreditsTab = createTab("CreditsTab", 5)
+local HomeTab = createTab("Home", 1)
+local GameTab = createTab("Game", 2)
+local GameslistTab = createTab("Game List", 3)
+local SettingsTab = createTab("Settings", 4)
+local CreditsTab = createTab("Credits", 5)
 
 local homeframe = createContainer("homeframe")
 local gameFrame = createContainer("gameFrame")
@@ -230,6 +219,7 @@ local Elements = loadModule(getgitpath("src") .. "elements.lua")
 local Utils = loadModule(getgitpath("modules") .. "utils.lua")
 local Dragging = loadModule(getgitpath("modules") .. "dragging.lua")
 local TabsModule = loadModule(getgitpath("modules") .. "tabs.lua")
+local Theme = loadModule(getgitpath("modules") .. "theme.lua")
 
 local Games = loadModule(getgitpath("data") .. "games.lua")
 local Credits = loadModule(getgitpath("data") .. "credits.lua")
@@ -240,11 +230,8 @@ local GameListPage = loadModule(getgitpath("pages") .. "gamelist.lua")
 local SettingsPage = loadModule(getgitpath("pages") .. "settings.lua")
 local CreditsPage = loadModule(getgitpath("pages") .. "credits.lua")
 
-local Theme = loadModule(getgitpath("modules") .. "theme.lua")
-local SettingsStore = loadModule(getgitpath("modules") .. "settingsStore.lua")
-
 if not Elements or not Utils or not Dragging or not TabsModule or not Theme then
-	warn("[XYZ - HUB] Core modules failed.")
+	warn("[XYZ - HUB] Core module failed.")
 	return
 end
 
@@ -258,34 +245,6 @@ local Sections = {
 
 local Tabs = TabsModule:Create(Sections, Utils)
 
-local Settings = SettingsStore and SettingsStore:Load() or {}
-
-if Theme and Settings.Theme then
-	Theme:Set(Settings.Theme)
-end
-
-if Settings.HubPosition then
-	MainFrame.Position = UDim2.new(
-		Settings.HubPosition.XScale,
-		Settings.HubPosition.XOffset,
-		Settings.HubPosition.YScale,
-		Settings.HubPosition.YOffset
-	)
-end
-
-if Settings.TogglePosition then
-	ToggleButton.Position = UDim2.new(
-		Settings.TogglePosition.XScale,
-		Settings.TogglePosition.XOffset,
-		Settings.TogglePosition.YScale,
-		Settings.TogglePosition.YOffset
-	)
-end
-
-local scale = Instance.new("UIScale")
-scale.Parent = MainFrame
-scale.Scale = Settings.UIScale == "Small" and 0.9 or Settings.UIScale == "Large" and 1.1 or 1
-
 local context = {
 	Hub = Hub,
 	UI = ScreenGui,
@@ -296,25 +255,13 @@ local context = {
 	Utils = Utils,
 	Tabs = Tabs,
 	Theme = Theme,
-	SettingsStore = SettingsStore,
-	Settings = Settings,
 	Games = Games or {},
 	Credits = Credits or {}
-
 }
-
-HideButton.MouseEnter:Connect(function()
-	tween(HideButton, {BackgroundColor3 = Color3.fromRGB(45, 47, 70)})
-end)
-
-HideButton.MouseLeave:Connect(function()
-	tween(HideButton, {BackgroundColor3 = Color3.fromRGB(32, 34, 52)})
-end)
 
 HideButton.MouseButton1Click:Connect(function()
 	MainFrame.Visible = false
 	ToggleButton.Visible = true
-	ToggleButton.ZIndex = 999
 end)
 
 ToggleButton.MouseButton1Click:Connect(function()
@@ -325,10 +272,30 @@ end)
 Dragging:MakeDraggable(MainFrame)
 Dragging:MakeDraggable(ToggleButton)
 
-HomePage:Render(context)
-GamePage:Render(context)
-GameListPage:Render(context)
-SettingsPage:Render(context)
-CreditsPage:Render(context)
+local function safeRender(name, page)
+	if not page or type(page.Render) ~= "function" then
+		warn("[XYZ - HUB] Missing page:", name)
+		return
+	end
+
+	local ok, err = pcall(function()
+		page:Render(context)
+	end)
+
+	if not ok then
+		warn("[XYZ - HUB] Render error:", name, err)
+		local container = Sections[name] and Sections[name].Container
+		if container then
+			Elements:Hero(container, "Page Error", name)
+			Elements:Label(tostring(err), container)
+		end
+	end
+end
+
+safeRender("Home", HomePage)
+safeRender("Game", GamePage)
+safeRender("GamesList", GameListPage)
+safeRender("Settings", SettingsPage)
+safeRender("Credits", CreditsPage)
 
 Tabs:Init(Sections.Home)
