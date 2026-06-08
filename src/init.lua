@@ -45,10 +45,11 @@ function env.getgitpath(pathType)
 end
 
 function env.XYZHubLoad(path)
-	local finalPath = path .. "?t=" .. tostring(os.time())
+	local separator = string.find(path, "?", 1, true) and "&" or "?"
+	local finalPath = path .. separator .. "cacheBust=" .. tostring(os.clock()) .. "-" .. tostring(math.random(1, 999999999))
 
 	local success, result = pcall(function()
-		return game:HttpGet(finalPath)
+		return game:HttpGet(finalPath, true)
 	end)
 
 	if not success then
