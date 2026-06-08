@@ -1,47 +1,67 @@
-local GameListPage = {}
+local GamePage = {}
 
-function GameListPage:Render(context)
-	local container = context.Sections.GamesList.Container
+function GamePage:Render(context)
+	local container = context.Sections.Game.Container
 	local Elements = context.Elements
 	local Utils = context.Utils
-	local Games = context.Games
+	local Games = context.Games or {}
 
 	Utils:Clear(container)
 
-	Elements:Hero(container, "Game List", "Search supported games")
-	Elements:StatCard(container, "Total Games", tostring(#Games), "📋")
+	local currentPlaceId = tostring(game.PlaceId)
 
-	Elements:SearchBox(container, "Search game...", function(query)
-		GameListPage:RenderFiltered(context, query)
-	end)
+	Elements:Hero(container, "Game", "Current game detection")
+	Elements:StatCard(container, "Current PlaceId", currentPlaceId, "🧩")
+	Elements:StatCard(container, "Games Loaded", tostring(#Games), "📋")
 
-	GameListPage:RenderFiltered(context, "")
-end
-
-function GameListPage:RenderFiltered(context, query)
-	local container = context.Sections.GamesList.Container
-	local Elements = context.Elements
-	local Games = context.Games
-
-	for _, child in ipairs(container:GetChildren()) do
-		if child:GetAttribute("GameCard") then
-			child:Destroy()
-		end
-	end
-
-	query = string.lower(query or "")
+	local currentGame = nil
 
 	for _, gameData in ipairs(Games) do
-		local name = string.lower(gameData.name or "")
-
-		if query == "" or string.find(name, query, 1, true) then
-			local card = Elements:GameCard(container, gameData, function()
-				warn("[XYZ - HUB] Selected game:", gameData.name)
-			end)
-
-			card:SetAttribute("GameCard", true)
+		if tostring(gameData.placeId) == currentPlaceId then
+			currentGame = gameData
+			break
 		end
+	end
+
+	if not currentGame then
+		Elements:StatCard(container, "Status", "Unsupported", "🔴")
+		return
+	end
+
+	Elements:StatCard(container, "Status", (currentGame.status or "🟢") .. " Supported", "🎮")
+	Elements:StatCard(container, "Game", currentGame.name, "⭐")
+
+	local moduleUrl = getgitpath("games") .. currentPlaceId .. ".lua"
+	Elements:Label("Loading: " .. moduleUrl, container)
+
+	local code = getgenv().XYZHubLoad(moduleUrl)
+
+	if not code then
+		Elements:StatCard(container, "Module", "No module found", "⚠️")
+		return
+	end
+
+	local success, gameModule = pcall(function()
+		return loadstring(code)()
+	end)
+
+	if not success then
+		Elements:StatCard(container, "Module Error", tostring(gameModule), "🔴")
+		return
+	end
+
+	if typeof(gameModule) ~= "function" then
+		Elements:StatCard(container, "Module", "Did not return function", "🔴")
+		return
+	end
+
+	local ok, err = pcall(function()
+		gameModule(container, context)
+	end)
+
+	if not ok then
+		Elements:StatCard(container, "Runtime Error", tostring(err), "🔴")
 	end
 end
 
-return GameListPage
+return GamePage
