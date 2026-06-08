@@ -1,47 +1,37 @@
-local UserInputService = game:GetService("UserInputService")
+-- hack vault for brainrots
 
-local Dragging = {}
+return function(section)
+    local elements = loadstring(game:HttpGet(getgitpath("src").."elements.lua"))()
 
-function Dragging:MakeDraggable(guiObject)
-	local dragging = false
-	local dragInput
-	local mouseStart
-	local frameStart
+    local plr = game:GetService("Players").LocalPlayer
+    getgenv().FarmRots = false
 
-	guiObject.Active = true
+    elements:Toggle("Farm Brainrots", section, function(v)
+        if v then
+            getgenv().FarmRots = true
 
-	guiObject.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			mouseStart = input.Position
-			frameStart = guiObject.Position
+            while getgenv().FarmRots do
+                for _, br in pairs(workspace.EntitiesFolder:GetChildren()) do
+                    plr.Character:MoveTo(Vector3.new(-2494, 4, -726))
+                    task.wait(0.5)
+                    if not br:GetAttribute("SpawnZone") == 22 then
+                        continue
+                    end
 
-			input.Changed:Connect(function()
-				if input.UserInputState == Enum.UserInputState.End then
-					dragging = false
-				end
-			end)
-		end
-	end)
+                    if not br.PrimaryPart then
+                        continue
+                    end
 
-	guiObject.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			dragInput = input
-		end
-	end)
-
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input == dragInput then
-			local delta = input.Position - mouseStart
-
-			guiObject.Position = UDim2.new(
-				frameStart.X.Scale,
-				frameStart.X.Offset + delta.X,
-				frameStart.Y.Scale,
-				frameStart.Y.Offset + delta.Y
-			)
-		end
-	end)
+                    plr.Character:MoveTo(br.PrimaryPart.Position)
+                    task.wait()
+                    repeat fireproximityprompt(br.PrimaryPart.TakeBrainrotPrompt) task.wait() until not br.PrimaryPart or br.PrimaryPart:FindFirstChild("Attachment")
+                    plr.Character:MoveTo(Vector3.new(77, 4, -729))
+                    task.wait(1)
+                end
+                task.wait()
+            end
+        else
+            getgenv().FarmRots = false
+        end
+    end)
 end
-
-return Dragging
