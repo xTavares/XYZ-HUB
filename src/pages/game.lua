@@ -1,72 +1,47 @@
-local GamePage = {}
+local GameListPage = {}
 
-function GamePage:Render(context)
-	local container = context.Sections.Game.Container
+function GameListPage:Render(context)
+	local container = context.Sections.GamesList.Container
 	local Elements = context.Elements
 	local Utils = context.Utils
 	local Games = context.Games
-	local Tabs = context.Tabs
-	local Sections = context.Sections
 
 	Utils:Clear(container)
 
-	local currentPlaceId = tostring(game.PlaceId)
-	local currentGame
+	Elements:Hero(container, "Game List", "Search supported games")
+	Elements:StatCard(container, "Total Games", tostring(#Games), "📋")
 
-	for _, gameData in ipairs(Games) do
-		if tostring(gameData.placeId) == currentPlaceId then
-			currentGame = gameData
-			break
+	Elements:SearchBox(container, "Search game...", function(query)
+		GameListPage:RenderFiltered(context, query)
+	end)
+
+	GameListPage:RenderFiltered(context, "")
+end
+
+function GameListPage:RenderFiltered(context, query)
+	local container = context.Sections.GamesList.Container
+	local Elements = context.Elements
+	local Games = context.Games
+
+	for _, child in ipairs(container:GetChildren()) do
+		if child:GetAttribute("GameCard") then
+			child:Destroy()
 		end
 	end
 
-	if not currentGame then
-		Elements:Hero(container, "Unsupported Game", "This Game is not Registered in XYZ - HUB.")
-		Elements:StatCard(container, "Current PlaceId", currentPlaceId, "🔴")
+	query = string.lower(query or "")
 
-		Elements:Button("Open Game List", container, function()
-			Tabs:Switch(Sections.GamesList)
-		end)
+	for _, gameData in ipairs(Games) do
+		local name = string.lower(gameData.name or "")
 
-		Elements:Button("Copy Discord", container, function()
-			if setclipboard then
-				setclipboard(context.Hub.Discord)
-			end
-		end)
+		if query == "" or string.find(name, query, 1, true) then
+			local card = Elements:GameCard(container, gameData, function()
+				warn("[XYZ - HUB] Selected game:", gameData.name)
+			end)
 
-		return
-	end
-
-	Elements:Hero(container, currentGame.name, "Premium Module Interface")
-	Elements:StatCard(container, "Status", currentGame.status .. " Supported", "🎮")
-	Elements:StatCard(container, "PlaceId", currentPlaceId, "🧩")
-
-	Elements:SectionTitle(container, "Modules")
-
-	local moduleUrl = getgitpath("games") .. currentPlaceId .. ".lua"
-	local code = getgenv().XYZHubLoad(moduleUrl)
-
-	if not code then
-		Elements:StatCard(container, "Module", "No Module Found", "⚠️")
-		return
-	end
-
-	local success, gameModule = pcall(function()
-		return loadstring(code)()
-	end)
-
-	if not success or typeof(gameModule) ~= "function" then
-		Elements:StatCard(container, "Module", "Load Error", "🔴")
-		return
-	end
-
-	local runSuccess, runError = pcall(function()
-		gameModule(container, context)
-	end)
-
-	if not runSuccess then
-		Elements:StatCard(container, "Runtime Error", tostring(runError), "🔴")
+			card:SetAttribute("GameCard", true)
+		end
 	end
 end
 
-return GamePage
+return GameListPage
