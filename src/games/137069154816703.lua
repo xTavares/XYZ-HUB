@@ -1,6 +1,5 @@
 -- Hack Vault for Brainrots
 -- XYZ - HUB adapted module
--- Zone 20+ filter added
 
 return function(section, context)
 	local elements = context.Elements
@@ -17,24 +16,24 @@ return function(section, context)
 					plr.Character:MoveTo(Vector3.new(-2494, 4, -726))
 					task.wait(0.5)
 
-					-- ✅ FILTER: Apenas zones 20 ou superior
-					local spawnZone = br:GetAttribute("SpawnZone")
-					if spawnZone and spawnZone >= 20 then
-						if not br.PrimaryPart then
-							continue
-						end
-
-						plr.Character:MoveTo(br.PrimaryPart.Position)
-						task.wait()
-
-						repeat
-							fireproximityprompt(br.PrimaryPart.TakeBrainrotPrompt)
-							task.wait()
-						until not br.PrimaryPart or br.PrimaryPart:FindFirstChild("Attachment")
-
-						plr.Character:MoveTo(Vector3.new(77, 4, -729))
-						task.wait(1)
+					if not br:GetAttribute("SpawnZone") == 22 then
+						continue
 					end
+
+					if not br.PrimaryPart then
+						continue
+					end
+
+					plr.Character:MoveTo(br.PrimaryPart.Position)
+					task.wait()
+
+					repeat
+						fireproximityprompt(br.PrimaryPart.TakeBrainrotPrompt)
+						task.wait()
+					until not br.PrimaryPart or br.PrimaryPart:FindFirstChild("Attachment")
+
+					plr.Character:MoveTo(Vector3.new(77, 4, -729))
+					task.wait(1)
 				end
 
 				task.wait()
