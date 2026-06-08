@@ -1,46 +1,44 @@
-local GameListPage = {}
+local RunService = game:GetService("RunService")
 
-function GameListPage:Render(context)
-	local container = context.Sections.GamesList.Container
+local SettingsPage = {}
+
+function SettingsPage:Render(context)
+	local container = context.Sections.Settings.Container
 	local Elements = context.Elements
 	local Utils = context.Utils
-	local Games = context.Games
+	local Hub = context.Hub
+	local Theme = context.Theme
 
 	Utils:Clear(container)
 
-	Elements:Hero(container, "Game List", "Search Supported Games")
+	Elements:Hero(container, "Settings", "Customize visuals and performance")
 
-	local searchBox = Elements:SearchBox(container, "Search Game...", function(query)
-		GameListPage:RenderFiltered(context, query)
+	Elements:SectionTitle(container, "Themes")
+
+	for themeName in pairs(Theme.Presets) do
+		Elements:Button((Theme.Current == themeName and "✓ " or "") .. themeName, container, function()
+			Theme:Set(themeName)
+			SettingsPage:Render(context)
+		end)
+	end
+
+	Elements:SectionTitle(container, "Performance")
+
+	Elements:Toggle("Disable 3D Rendering", container, function(enabled)
+		RunService:Set3dRenderingEnabled(not enabled)
 	end)
 
-	GameListPage:RenderFiltered(context, "")
+	Elements:Toggle("Low Performance Mode", container, function(enabled)
+		settings().Rendering.QualityLevel = enabled and Enum.QualityLevel.Level01 or Enum.QualityLevel.Automatic
+	end)
+
+	Elements:SectionTitle(container, "Automation")
+
+	Elements:Toggle("Auto Rejoin", container, function(enabled)
+		Hub.AutoRejoin = enabled
+	end)
+
+	Elements:StatCard(container, "Current Theme", Theme.Current, "🎨")
 end
 
-function GameListPage:RenderFiltered(context, query)
-	local container = context.Sections.GamesList.Container
-	local Elements = context.Elements
-	local Games = context.Games
-
-	for _, child in ipairs(container:GetChildren()) do
-		if child:GetAttribute("GameCard") then
-			child:Destroy()
-		end
-	end
-
-	query = string.lower(query or "")
-
-	for _, gameData in ipairs(Games) do
-		local name = string.lower(gameData.name)
-
-		if query == "" or string.find(name, query, 1, true) then
-			local card = Elements:GameCard(container, gameData, function()
-				warn("[XYZ - HUB] Selected game:", gameData.name)
-			end)
-
-			card:SetAttribute("GameCard", true)
-		end
-	end
-end
-
-return GameListPage
+return SettingsPage
