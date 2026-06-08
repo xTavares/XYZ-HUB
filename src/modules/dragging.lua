@@ -1,46 +1,47 @@
-local Tabs = {}
+local UserInputService = game:GetService("UserInputService")
 
-function Tabs:Create(sections, utils)
-	local controller = {}
-	controller.CurrentSection = nil
+local Dragging = {}
 
-	function controller:Switch(section)
-		if self.CurrentSection == section then return end
+function Dragging:MakeDraggable(guiObject)
+	local dragging = false
+	local dragInput = nil
+	local mouseStart = nil
+	local frameStart = nil
 
-		if self.CurrentSection then
-			self.CurrentSection.TabBtn.BackgroundTransparency = 1
-			utils:Tween(self.CurrentSection.Container, {
-				Position = UDim2.new(0.5, 0, 1, 0)
-			}, 0.18)
-		end
+	guiObject.Active = true
 
-		section.Container.Visible = true
-		section.TabBtn.BackgroundTransparency = 0
+	guiObject.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			mouseStart = input.Position
+			frameStart = guiObject.Position
 
-		utils:Tween(section.Container, {
-			Position = UDim2.new(0.5, 0, 0, 0)
-		}, 0.18)
-
-		self.CurrentSection = section
-	end
-
-	function controller:Init(defaultSection)
-		for _, section in pairs(sections) do
-			section.TabBtn.BackgroundTransparency = 1
-			section.Container.Visible = false
-			section.Container.Position = UDim2.new(0.5, 0, 1, 0)
-
-			section.TabBtn.MouseButton1Click:Connect(function()
-				self:Switch(section)
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
 			end)
 		end
+	end)
 
-		if defaultSection then
-			self:Switch(defaultSection)
+	guiObject.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
 		end
-	end
+	end)
 
-	return controller
+	UserInputService.InputChanged:Connect(function(input)
+		if dragging and input == dragInput and mouseStart and frameStart then
+			local delta = input.Position - mouseStart
+
+			guiObject.Position = UDim2.new(
+				frameStart.X.Scale,
+				frameStart.X.Offset + delta.X,
+				frameStart.Y.Scale,
+				frameStart.Y.Offset + delta.Y
+			)
+		end
+	end)
 end
 
-return Tabs
+return Dragging
