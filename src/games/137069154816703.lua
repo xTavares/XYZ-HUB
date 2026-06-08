@@ -19,24 +19,22 @@ return function(section, context)
 
 					-- ✅ FILTER: Apenas zones 20 ou superior
 					local spawnZone = br:GetAttribute("SpawnZone")
-					if not spawnZone or spawnZone < 20 then
-						continue
-					end
+					if spawnZone and spawnZone >= 20 then
+						if not br.PrimaryPart then
+							continue
+						end
 
-					if not br.PrimaryPart then
-						continue
-					end
-
-					plr.Character:MoveTo(br.PrimaryPart.Position)
-					task.wait()
-
-					repeat
-						fireproximityprompt(br.PrimaryPart.TakeBrainrotPrompt)
+						plr.Character:MoveTo(br.PrimaryPart.Position)
 						task.wait()
-					until not br.PrimaryPart or br.PrimaryPart:FindFirstChild("Attachment")
 
-					plr.Character:MoveTo(Vector3.new(77, 4, -729))
-					task.wait(1)
+						repeat
+							fireproximityprompt(br.PrimaryPart.TakeBrainrotPrompt)
+							task.wait()
+						until not br.PrimaryPart or br.PrimaryPart:FindFirstChild("Attachment")
+
+						plr.Character:MoveTo(Vector3.new(77, 4, -729))
+						task.wait(1)
+					end
 				end
 
 				task.wait()
